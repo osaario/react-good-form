@@ -1,6 +1,6 @@
 # React Good Form
 
-Good Form that supports nesting and provides validation
+React validated form with nesting support and autofocus.
 
 ## Installation
 
@@ -10,7 +10,7 @@ npm install react-good-form
 
 ## Usage
 
-Good form supports common rules (minLength, notEmpty, email). You can also define any arbitary rule as regular expression, using the regExp rule. Good form also supports nested scopes inside the same form. Good form will autofocus on the first invalid field when submit button is pressed.
+Good form supports common rules (`minLength`, `notEmpty`, `email`...). You can also define any arbitary rule as regular expression, using the `regExp` rule. Good Form also supports nested scopes inside the same form. Good Form will autofocus on the first invalid field when submit button is pressed.
 
 ```JSX
 import React, { Fragment } from "react"
