@@ -10,6 +10,8 @@ npm install react-good-form
 
 ## Usage
 
+Good form supports common rules (minLength, notEmpty, email). You can also define any arbitary rule as regular expression, using the regExp rule. Good form also supports nested scopes inside the same form. Good form will autofocus on the first invalid field when submit button is pressed.
+
 ```JSX
 import React, { Fragment } from "react"
 import { Form } from "react-good-form"
