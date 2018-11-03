@@ -3,6 +3,9 @@ import * as _ from 'lodash'
 import { formRules, ValidationRuleType, Validation } from './formrules'
 const L: any = require('partial.lenses')
 
+// just a random type name to avoid possible collisions
+const wrappedTypeName = 'oTMiaY58D7'
+
 type ValidationRules = {
   [P in keyof typeof formRules]?: (typeof formRules)[P] extends ValidationRuleType<boolean>
     ? boolean
@@ -289,13 +292,13 @@ const wrapValue = (value: number | string | boolean) => {
     rules: [],
     touched: false,
     ref: null,
-    type: 'wrappedValue',
+    type: wrappedTypeName,
     value
   }
 }
 
 const isWrappedValue = (o: any) => {
-  return o.type && o.type === 'wrappedValue'
+  return o.type && o.type === wrappedTypeName
 }
 
 const wrappedValues = L.compose(
