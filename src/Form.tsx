@@ -392,14 +392,18 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     }
     this.setState(state => {
       return arr.reduce((agg, e) => {
-        if (!L.isDefined([e.lens, 'value'], state)) {
-          // if (this.props.allowUndefinedPaths) {
-          console.warn('Undefined form field value: ' + e.lens.toString())
-          //  } else {
-          //   throw Error('Undefined form field value: ' + e.lens.toString())
-          //   }
+        if (!L.isDefined(e.lens, state)) {
+          return L.set([e.lens], wrapValue(e.value), agg)
+        } else {
+          if (!L.isDefined([e.lens, 'value'], state)) {
+            // if (this.props.allowUndefinedPaths) {
+            console.warn('Undefined form field value: ' + e.lens.toString())
+            //  } else {
+            //   throw Error('Undefined form field value: ' + e.lens.toString())
+            //   }
+          }
+          return L.set([e.lens, 'value'], e.value, agg)
         }
-        return L.set([e.lens, 'value'], e.value, agg)
       }, state)
     })
   }
