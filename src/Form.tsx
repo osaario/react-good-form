@@ -9,7 +9,9 @@ const wrappedTypeName = 'oTMiaY58D7'
 type ValidationRules = {
   [P in keyof typeof formRules]?: (typeof formRules)[P] extends ValidationRuleType<boolean>
     ? boolean
-    : (typeof formRules)[P] extends ValidationRuleType<number> ? number : string
+    : (typeof formRules)[P] extends ValidationRuleType<number>
+      ? number
+      : (typeof formRules)[P] extends ValidationRuleType<string> ? string : RegExp
 }
 export type ValidationGroup = { [K in keyof typeof formRules]?: Validation }
 
@@ -391,11 +393,11 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     this.setState(state => {
       return arr.reduce((agg, e) => {
         if (!L.isDefined([e.lens, 'value'], state)) {
-          if (this.props.allowUndefinedPaths) {
-            console.warn('Undefined form field value: ' + e.lens.toString())
-          } else {
-            throw Error('Undefined form field value: ' + e.lens.toString())
-          }
+          // if (this.props.allowUndefinedPaths) {
+          console.warn('Undefined form field value: ' + e.lens.toString())
+          //  } else {
+          //   throw Error('Undefined form field value: ' + e.lens.toString())
+          //   }
         }
         return L.set([e.lens, 'value'], e.value, agg)
       }, state)
