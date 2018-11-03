@@ -1,18 +1,18 @@
 {
-  "name": "declarative-components",
-  "version": "0.0.42-development",
+  "name": "react-good-form",
+  "version": "0.0.0-development",
   "description": "",
   "keywords": [],
-  "main": "dist/declarative-components.umd.js",
-  "module": "dist/declarative-components.es5.js",
-  "typings": "dist/types/declarative-components.d.ts",
+  "main": "dist/react-good-form.umd.js",
+  "module": "dist/react-good-form.es5.js",
+  "typings": "dist/types/react-good-form.d.ts",
   "files": [
     "dist"
   ],
   "author": "osaario <osaario1@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/osaario/declarative-components.git"
+    "url": "https://github.com/osaario/react-good-form.git"
   },
   "license": "MIT",
   "engines": {
@@ -118,13 +118,12 @@
     "typedoc": "^0.12.0",
     "typescript": "^3.0.3"
   },
-  "dependencies": {
-    "is-promise": "^2.1.0",
-    "lodash": "^4.17.11",
-    "partial.lenses": "^13.2.0",
+  "peerDependencies": {
     "react": "^16.6.0",
-    "react-dom": "^16.6.0",
-    "rxjs": "^5.5.12",
-    "symbol-observable": "^1.2.0"
+    "react-dom": "^16.6.0"
+  },
+  "dependencies": {
+    "lodash": "^4.17.11",
+    "partial.lenses": "^13.2.0"
   }
 }
