@@ -1,7 +1,7 @@
 {
   "name": "react-good-form",
   "version": "0.0.0-development",
-  "description": "",
+  "description": "Good Form that supports nesting and provides validation",
   "keywords": [],
   "main": "dist/react-good-form.umd.js",
   "module": "dist/react-good-form.es5.js",
@@ -12,7 +12,7 @@
   "author": "osaario <osaario1@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/osaario/react-good-form.git"
+    "url": "git+https://github.com/osaario/react-good-form.git"
   },
   "license": "MIT",
   "engines": {
@@ -125,5 +125,13 @@
   "dependencies": {
     "lodash": "^4.17.11",
     "partial.lenses": "^13.2.0"
+  },
+  "bugs": {
+    "url": "https://github.com/osaario/react-good-form/issues"
+  },
+  "homepage": "https://github.com/osaario/react-good-form#readme",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
   }
 }
