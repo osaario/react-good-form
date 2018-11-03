@@ -144,6 +144,7 @@ export class FormScope<T, S extends keyof T> extends React.Component<
   constructor(props: FormScopeSharedPublicProps<T[S]> & FormScopePrivateProps<T> & FormSubScopePublicProps<T, S>) {
     super(props)
   }
+  /*
   shouldComponentUpdate(nextProps: FormScopePrivateProps<T> & FormSubScopePublicProps<T, S>) {
     // if not optimized scope always return true
     if (!this.props.optimized) return true
@@ -154,6 +155,7 @@ export class FormScope<T, S extends keyof T> extends React.Component<
     }
     return false
   }
+  */
   getValidationForField(lens: LensPathType) {
     // field not touched
     const rules = L.get([lens, 'rules'], this.props.value)
@@ -267,6 +269,13 @@ export class FormScope<T, S extends keyof T> extends React.Component<
     }
   }
   render() {
+    const valueOnScope = L.get(
+      L.compose(
+        this.props.lensPathToRoot,
+        [this.props.scope]
+      ),
+      this.props.value
+    )
     return (
       <React.Fragment>
         {this.props.children(
@@ -276,7 +285,7 @@ export class FormScope<T, S extends keyof T> extends React.Component<
             Validation: this.Validation,
             Sub: this.Sub
           },
-          L.modify(wrappedValues, unWrapValue, this.props.rootValue[this.props.scope]),
+          L.modify(wrappedValues, unWrapValue, valueOnScope),
           this.riggedOnChange
         )}
       </React.Fragment>
