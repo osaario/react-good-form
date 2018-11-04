@@ -2,7 +2,7 @@ import * as React from 'react'
 import * as _ from 'lodash'
 import { formRules, ValidationRuleType, Validation } from './formrules'
 const L: any = require('partial.lenses')
-import { wrapValue, unWrapValue, wrappedValues } from './lenshelpers'
+import { wrappedIso } from './lenshelpers'
 
 // just a random type name to avoid possible collisions
 

@@ -35,7 +35,7 @@ describe('Lens helpers tests', () => {
     expect(unWrappedPerson.pets[0].nickName).toEqual('Rufus')
   })
 
-  it('See if partial unwrapping maintains refs', () => {
+  it('See if partial unwrapping maintains equality', () => {
     expect(L.get(L.inverse(wrappedIso), wrappedPerson.address)).toEqual(unWrappedPerson.address)
     expect(L.get(L.inverse(wrappedIso), wrappedPerson.pets)).toEqual(unWrappedPerson.pets)
     expect(L.get(L.inverse(wrappedIso), wrappedPerson.pets)[0]).toEqual(unWrappedPerson.pets[0])
@@ -54,5 +54,14 @@ describe('Lens helpers tests', () => {
     expect(newWrapped.address.district.value).toEqual('Center')
     expect(newWrapped.address.district.touched).toEqual(false)
     expect(newWrapped.address.district.rules).toEqual([])
+  })
+  it('Inserting new object with iso ', () => {
+    const newWrapped = L.set([L.inverse(wrappedIso), 'address'], { district: 'Center', house: 'A' }, wrappedPerson)
+    expect(newWrapped).toBeTruthy()
+    expect(newWrapped.address.district.value).toBe('Center')
+    expect(newWrapped.address.district.touched).toBe(false)
+    expect(newWrapped.address.house.value).toBe('A')
+    expect(newWrapped.address.house.touched).toBe(false)
+    expect(newWrapped.address.house.rules).toEqual([])
   })
 })
