@@ -2,9 +2,9 @@ import * as React from 'react'
 import * as _ from 'lodash'
 import { formRules, ValidationRuleType, Validation } from './formrules'
 const L: any = require('partial.lenses')
+import { wrapValue, unWrapValue, wrappedValues } from './lenshelpers'
 
 // just a random type name to avoid possible collisions
-const wrappedTypeName = 'oTMiaY58D7'
 
 type ValidationRules = {
   [P in keyof typeof formRules]?: (typeof formRules)[P] extends ValidationRuleType<boolean>
@@ -43,10 +43,6 @@ export interface FormSubScopePublicProps<T, S extends keyof T> {
   scope: S
 }
 
-const unWrapValue = (wrapped: any) => {
-  return wrapped.value
-}
-
 export interface FormScopeSharedPublicProps<T> {
   optimized?: boolean
   children: (
@@ -68,10 +64,12 @@ type LensPathType = (string | number)[]
 type FormEventType<T> = T extends Array<infer G> ? { [K in keyof G]?: G[K] }[] : { [K in keyof T]?: T[K] }
 
 export interface FormScopePrivateProps<T> {
+  // not really used for anything, just here for type inference
   rootValue: T
+  //
   value: any
   iteration: number
-  onChange: (e: any) => void
+  setState: (newState: any) => void
   onInsertRule: (lensPath: LensPathType, rule: ValidationRules, ref: React.RefObject<HTMLInputElement>) => void
   onRemoveRule: (lensPath: LensPathType) => void
   touchField: (lensPath: LensPathType) => void
@@ -178,7 +176,7 @@ export class FormScope<T, S extends keyof T> extends React.Component<
       <FormScope
         {...props}
         iteration={this.props.iteration}
-        onChange={this.props.onChange}
+        setState={this.props.setState}
         rootValue={this.props.rootValue[this.props.scope]}
         value={this.props.value}
         onInsertRule={this.props.onInsertRule}
@@ -243,29 +241,47 @@ export class FormScope<T, S extends keyof T> extends React.Component<
     if ((e as any).target && _.isObject((e as any).target)) {
       const event = e as any
 
-      const rigged = {
-        data: {
-          [event.target.name]: event.target.type === 'checkbox' ? event.target.checked : event.target.value
-        },
-        rootLens: this.props.lensPathToRoot.concat([this.props.scope as any])
-      }
-      this.props.onChange(rigged as any)
+      const state = L.set(
+        L.compose(
+          this.getLensPathForField(event.target.name),
+          'value'
+        ),
+        event.target.value,
+        this.props.value
+      )
+      console.log('newstate', state)
+      this.props.setState(state)
     } else if (_.isArray(e)) {
       const events = e as FormEventType<T[S]>[]
+      console.log(events)
+      /*
       const rigged = events.map(event => {
         return {
           data: event,
           rootLens: this.props.lensPathToRoot.concat([this.props.scope as any])
         }
-      })
-      this.props.onChange(rigged)
+      })*/
     } else {
       const event = e as FormEventType<T[S]>
+      console.log(event)
+      console.log('new', L.modify(L.leafs, wrapValue, event))
+      console.log('old', L.get([this.props.lensPathToRoot, this.props.scope], this.props.value))
+      /*
       const rigged = {
         data: event,
         rootLens: this.props.lensPathToRoot.concat([this.props.scope as any])
       }
-      this.props.onChange(rigged)
+      const state = L.set(
+        L.compose(
+          this.getLensPathForField(event.target.name),
+          'value'
+        ),
+        event,
+        this.props.value
+      )
+      console.log('newstate', state)
+      this.props.setState(state)
+      */
     }
   }
   render() {
@@ -297,27 +313,6 @@ export interface FormState<T> {
   value: T
   iteration: 0
 }
-
-const wrapValue = (value: number | string | boolean) => {
-  return {
-    rules: [],
-    touched: false,
-    ref: null,
-    type: wrappedTypeName,
-    value
-  }
-}
-
-const isWrappedValue = (o: any) => {
-  return o.type && o.type === wrappedTypeName
-}
-
-const wrappedValues = L.compose(
-  L.lazy((rec: any) => {
-    return L.ifElse(_.isObject, L.ifElse(isWrappedValue, L.optional, [L.children, rec]), L.optional)
-  }),
-  L.when(isWrappedValue)
-)
 
 export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
   state: FormState<T> = {
@@ -369,10 +364,12 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
         rootValue={this.state}
         value={this.state}
         onInsertRule={this.insertRule}
+        setState={(state: any) => {
+          this.setState(state)
+        }}
         onRemoveRule={this.removeRule}
         touchField={this.touchField}
         unTouchField={this.unTouchField}
-        onChange={this.handleFieldChange}
         lensPathToRoot={[]}
         scope="value"
       />
@@ -385,7 +382,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
         e.map((ee, idx) => {
           return _.map(ee.data, (value, key) => {
             return {
-              value: value,
+              value,
               lens: ee.rootLens.concat([idx, key])
             }
           })
