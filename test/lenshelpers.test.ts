@@ -39,5 +39,20 @@ describe('Lens helpers tests', () => {
     expect(L.get(L.inverse(wrappedIso), wrappedPerson.address)).toEqual(unWrappedPerson.address)
     expect(L.get(L.inverse(wrappedIso), wrappedPerson.pets)).toEqual(unWrappedPerson.pets)
     expect(L.get(L.inverse(wrappedIso), wrappedPerson.pets)[0]).toEqual(unWrappedPerson.pets[0])
+    expect(L.get(['pets', L.inverse(wrappedIso)], wrappedPerson)[0]).toEqual(unWrappedPerson.pets[0])
+  })
+  it('Setting stuff with iso ', () => {
+    const newWrapped = L.set([L.inverse(wrappedIso), 'address', 'street'], 'Porvoonkatu', wrappedPerson)
+    expect(newWrapped).toBeTruthy()
+    expect(newWrapped.address.street.value).toEqual('Porvoonkatu')
+
+    expect(L.get(L.inverse(wrappedIso), newWrapped.address) !== unWrappedPerson.address).toBeTruthy()
+  })
+  it('Inserting new stuff with iso ', () => {
+    const newWrapped = L.set([L.inverse(wrappedIso), 'address', 'district'], 'Center', wrappedPerson)
+    expect(newWrapped).toBeTruthy()
+    expect(newWrapped.address.district.value).toEqual('Center')
+    expect(newWrapped.address.district.touched).toEqual(false)
+    expect(newWrapped.address.district.rules).toEqual([])
   })
 })
