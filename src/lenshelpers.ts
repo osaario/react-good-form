@@ -14,17 +14,24 @@ export function wrapValue(value: number | string | boolean) {
 }
 
 export function isWrappedValue(o: any) {
-  return o.type && o.type === wrappedTypeName
+  return o && o.type && o.type === wrappedTypeName
 }
 export function unWrapValue(wrapped: any) {
   return wrapped.value
 }
 
+export const wrappedValuesOrPrimitives = L.lazy((rec: any) => {
+  return L.ifElse(_.isObject, L.ifElse(isWrappedValue, L.optional, [L.children, rec]), L.optional)
+})
+
 export const wrappedValues = L.compose(
-  L.lazy((rec: any) => {
-    return L.ifElse(_.isObject, L.ifElse(isWrappedValue, L.optional, [L.children, rec]), L.optional)
-  }),
+  wrappedValuesOrPrimitives,
   L.when(isWrappedValue)
 )
 
-export const wrappedIso = L.iso(L.modify(L.leafs, wrapValue), L.modify(wrappedValues, unWrapValue))
+export const newPrimitives = L.compose(
+  wrappedValuesOrPrimitives,
+  L.unless(isWrappedValue)
+)
+
+export const wrappedIso = L.iso(L.modify(newPrimitives, wrapValue), L.modify(wrappedValues, unWrapValue))

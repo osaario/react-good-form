@@ -42,21 +42,22 @@ describe('Lens helpers tests', () => {
     expect(L.get(['pets', L.inverse(wrappedIso)], wrappedPerson)[0]).toEqual(unWrappedPerson.pets[0])
   })
   it('Setting stuff with iso ', () => {
-    const newWrapped = L.set([L.inverse(wrappedIso), 'address', 'street'], 'Porvoonkatu', wrappedPerson)
+    const newWrapped = L.set(['address', 'street', L.inverse(wrappedIso)], 'Porvoonkatu', wrappedPerson)
     expect(newWrapped).toBeTruthy()
     expect(newWrapped.address.street.value).toEqual('Porvoonkatu')
 
     expect(L.get(L.inverse(wrappedIso), newWrapped.address) !== unWrappedPerson.address).toBeTruthy()
   })
   it('Inserting new stuff with iso ', () => {
-    const newWrapped = L.set([L.inverse(wrappedIso), 'address', 'district'], 'Center', wrappedPerson)
+    let _wrappedPerson = L.set(['address', 'district', 'touched'], true, wrappedPerson)
+    const newWrapped = L.assign(['address', 'district'], L.get(wrappedIso, 'Center'), _wrappedPerson)
     expect(newWrapped).toBeTruthy()
     expect(newWrapped.address.district.value).toEqual('Center')
     expect(newWrapped.address.district.touched).toEqual(false)
     expect(newWrapped.address.district.rules).toEqual([])
   })
   it('Inserting new object with iso ', () => {
-    const newWrapped = L.set([L.inverse(wrappedIso), 'address'], { district: 'Center', house: 'A' }, wrappedPerson)
+    const newWrapped = L.set(['address'], L.get(wrappedIso, { district: 'Center', house: 'A' }), wrappedPerson)
     expect(newWrapped).toBeTruthy()
     expect(newWrapped.address.district.value).toBe('Center')
     expect(newWrapped.address.district.touched).toBe(false)
