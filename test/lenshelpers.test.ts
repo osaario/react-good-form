@@ -81,15 +81,16 @@ describe('Lens helpers tests', () => {
     //L.set(['address', 'street', wrappedValues2], 'Porvoonkatu', _wrappedPerson)
   })
   it('Assigining stuff', () => {
-    const paths = pathsFor({ house: '2 B' })
+    const paths = pathsFor({ house: '2 B', city: 'Porvoo' })
     let _wrappedPerson = wrappedPerson
     paths.forEach((pair: any) => {
       console.log(pair)
-      _wrappedPerson = L.set(['address', pair[0], wrappedValuesLens], pair[1], wrappedPerson)
+      _wrappedPerson = L.set(['address', pair[0], wrappedValuesLens], pair[1], _wrappedPerson)
     })
 
     console.log(_wrappedPerson)
     expect(_wrappedPerson.address.house.value).toBe('2 B')
+    expect(_wrappedPerson.address.city.value).toBe('Porvoo')
     expect(_wrappedPerson.address.house.touched).toBe(false)
     expect(_wrappedPerson.address.house.rules).toEqual([])
     //L.set(['address', 'street', wrappedValues2], 'Porvoonkatu', _wrappedPerson)
