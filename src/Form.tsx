@@ -2,7 +2,7 @@ import * as React from 'react'
 import * as _ from 'lodash'
 import { formRules, ValidationRuleType, Validation } from './formrules'
 const L: any = require('partial.lenses')
-import { wrapValue, unWrapValue, wrappedValues } from './lenshelpers'
+import { wrapValue, unWrapValue, wrappedValues, getIndexesFor, wrappedValuesLens } from './lenshelpers'
 
 // just a random type name to avoid possible collisions
 
@@ -264,8 +264,12 @@ export class FormScope<T, S extends keyof T> extends React.Component<
     } else {
       const event = e as FormEventType<T[S]>
       console.log(event)
-      console.log('new', L.modify(L.leafs, wrapValue, event))
-      console.log('old', L.get([this.props.lensPathToRoot, this.props.scope], this.props.value))
+      const value = getIndexesFor(event).reduce((acc: any, val: any) => {
+        return L.set([this.props.lensPathToRoot, this.props.scope, val[0], wrappedValuesLens], val[1], acc)
+      }, this.props.value)
+      console.log(value)
+      this.props.setState(value)
+
       /*
       const rigged = {
         data: event,
@@ -374,44 +378,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
         scope="value"
       />
     )
-  }
-  handleFieldChange = (e: any) => {
-    let arr: any[]
-    if (_.isArray(e)) {
-      arr = _.flatten(
-        e.map((ee, idx) => {
-          return _.map(ee.data, (value, key) => {
-            return {
-              value,
-              lens: ee.rootLens.concat([idx, key])
-            }
-          })
-        })
-      )
-    } else {
-      arr = _.map(e.data, (value, key) => {
-        return {
-          value: value,
-          lens: e.rootLens.concat([key])
-        }
-      })
-    }
-    this.setState(state => {
-      return arr.reduce((agg, e) => {
-        if (!L.isDefined(e.lens, state)) {
-          return L.set([e.lens], wrapValue(e.value), agg)
-        } else {
-          if (!L.isDefined([e.lens, 'value'], state)) {
-            // if (this.props.allowUndefinedPaths) {
-            console.warn('Undefined form field value: ' + e.lens.toString())
-            //  } else {
-            //   throw Error('Undefined form field value: ' + e.lens.toString())
-            //   }
-          }
-          return L.set([e.lens, 'value'], e.value, agg)
-        }
-      }, state)
-    })
   }
   componentDidUpdate(prevProps: any) {
     if (prevProps.value !== this.props.value && JSON.stringify(prevProps.value) !== JSON.stringify(this.props.value)) {
