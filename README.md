@@ -1,6 +1,6 @@
 # React Good Form
 
-React validated form with nesting support and autofocus.
+React form with validation. Supports nested objects and static arrays.
 
 ## Installation
 
@@ -25,7 +25,13 @@ const initialPerson = {
     street: "",
     city: "",
     postalCode: ""
-  }
+  },
+  pets: [
+    {
+      nickName: "Rufus"
+    },
+    { nickName: "Bjerker" }
+  ]
 }
 const App = () => (
   <Form
@@ -36,8 +42,9 @@ const App = () => (
   >
     {({ Root }) => (
       <Fragment>
+        <h1>Person</h1>
         <Root>
-          {({ Input, Validation, Sub }, __, onChange) => (
+          {({ Input, Validation, Sub }, person, onChange) => (
             <Fragment>
               <Validation for="name">
                 {validation => (
@@ -90,37 +97,68 @@ const App = () => (
                   </div>
                 )}
               </Validation>
-              <Sub scope="address">
-                {({ Input, Validation }) => (
-                  <Fragment>
-                    <Validation for="street">
-                      {validation => (
-                        <div style={{ color: validation ? "red" : undefined }}>
-                          <label>Street</label>
-                          <Input minLength={3} maxLength={100} name="street" />
-                        </div>
-                      )}
-                    </Validation>
-                    <Validation for="city">
-                      {validation => (
-                        <div style={{ color: validation ? "red" : undefined }}>
-                          <label>Street</label>
-                          <Input notEmpty={true} name="city" />
-                        </div>
-                      )}
-                    </Validation>
-                  </Fragment>
-                )}
-              </Sub>
+              <h3>Address</h3>
+              <ul>
+                <Sub scope="address">
+                  {({ Input, Validation }) => (
+                    <Fragment>
+                      <Validation for="street">
+                        {validation => (
+                          <li style={{ color: validation ? "red" : undefined }}>
+                            <label>Street</label>
+                            <Input minLength={3} maxLength={100} name="street" />
+                          </li>
+                        )}
+                      </Validation>
+                      <Validation for="city">
+                        {validation => (
+                          <li style={{ color: validation ? "red" : undefined }}>
+                            <label>City</label>
+                            <Input notEmpty={true} name="city" />
+                          </li>
+                        )}
+                      </Validation>
+                    </Fragment>
+                  )}
+                </Sub>
+              </ul>
+              <h3>Pets</h3>
+              <ul>
+                <Sub scope="pets">
+                  {({ Input, Validation, Sub }, pets, onChange) => (
+                    <Fragment>
+                      {pets.map((pet, idx) => (
+                        <Sub scope={idx}>
+                          {({ Input, Validation }) => (
+                            <Validation for="nickName">
+                              {validation => (
+                                <li style={{ color: validation ? "red" : undefined }}>
+                                  <label>Nickname</label>
+                                  <Input minLength={2} maxLength={50} name="nickName" />
+                                </li>
+                              )}
+                            </Validation>
+                          )}
+                        </Sub>
+                      ))}
+                    </Fragment>
+                  )}
+                </Sub>
+              </ul>
             </Fragment>
           )}
         </Root>
+        <br />
         <button type="submit">Save person</button>
       </Fragment>
     )}
   </Form>
 )
 ```
+
+## Know issues:
+
+At the moment only supports static arrays.
 
 ## Acknowledgements
 
