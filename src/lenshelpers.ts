@@ -38,6 +38,14 @@ export function pathsFor(object: any) {
   return L.get(L.keyed, object)
 }
 
+export function getIndexesFor(val: any) {
+  return L.collectAs(
+    (value: any, path: any) => [L.collect(L.flatten, path), value],
+    L.lazy((rec: any) => L.ifElse(_.isObject, [L.joinIx(L.children), rec], [])),
+    val
+  )
+}
+
 export const wrappedValuesLens = L.ifElse(
   isWrappedValue,
   ['value'],

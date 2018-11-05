@@ -1,4 +1,4 @@
-import { wrappedIso, wrappedValuesLens } from '../src/lenshelpers'
+import { wrappedIso, wrappedValuesLens, getIndexesFor } from '../src/lenshelpers'
 import * as _ from 'lodash'
 const L: any = require('partial.lenses')
 
@@ -82,11 +82,22 @@ describe('Lens helpers tests', () => {
     //L.set(['address', 'street', wrappedValues2], 'Porvoonkatu', _wrappedPerson)
   })
   it('Assigining stuff', () => {
-    const indexes = L.collectAs(
-      (value: any, path: any) => [L.collect(L.flatten, path), value],
-      L.lazy((rec: any) => L.ifElse(_.isObject, [L.joinIx(L.children), rec], [])),
-      { house: '2 B', city: 'Porvoo' }
-    )
+    const indexes = getIndexesFor({ house: '2 B', city: 'Porvoo' })
+    console.log({ indexes })
+
+    const _wrappedPerson = indexes.reduce((acc: any, val: any) => {
+      return L.set(['address', val[0], wrappedValuesLens], val[1], acc)
+    }, wrappedPerson)
+    console.log(_wrappedPerson)
+
+    expect(_wrappedPerson.address.house.value).toBe('2 B')
+    expect(_wrappedPerson.address.city.value).toBe('Porvoo')
+    expect(_wrappedPerson.address.house.touched).toBe(false)
+    expect(_wrappedPerson.address.house.rules).toEqual([])
+    //L.set(['address', 'street', wrappedValues2], 'Porvoonkatu', _wrappedPerson)
+  })
+  it('Assigining  check mod stuff', () => {
+    const indexes = getIndexesFor({ house: '2 B', city: 'Porvoo' })
     console.log({ indexes })
 
     const _wrappedPerson = indexes.reduce((acc: any, val: any) => {
