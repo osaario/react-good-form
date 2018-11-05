@@ -1,4 +1,4 @@
-import { wrappedIso, patchLens } from '../src/lenshelpers'
+import { wrappedIso, wrappedValuesLens, pathsFor } from '../src/lenshelpers'
 const L: any = require('partial.lenses')
 
 /**
@@ -56,15 +56,42 @@ describe('Lens helpers tests', () => {
 
     expect(L.get(L.inverse(wrappedIso), newWrapped.address) !== unWrappedPerson.address).toBeTruthy()
   })
-  it('Inserting new stuff with iso ', () => {
+  it('Changing old stuff', () => {
     let _wrappedPerson = L.set(['address', 'street', 'touched'], true, wrappedPerson)
     expect(_wrappedPerson.address.street.touched).toEqual(true)
 
-    _wrappedPerson = L.set(['address', 'street', patchLens], 'Porvoonkatu', _wrappedPerson)
+    _wrappedPerson = L.set(['address', 'street', wrappedValuesLens], 'Porvoonkatu', _wrappedPerson)
 
     console.log(_wrappedPerson)
     expect(_wrappedPerson.address.street.touched).toBe(true)
     expect(_wrappedPerson.address.street.value).toBe('Porvoonkatu')
+    //L.set(['address', 'street', wrappedValues2], 'Porvoonkatu', _wrappedPerson)
+  })
+  it('Adding new stuff', () => {
+    let _wrappedPerson = L.set(['address', 'street', 'touched'], true, wrappedPerson)
+    expect(_wrappedPerson.address.street.touched).toEqual(true)
+
+    _wrappedPerson = L.set(['address', 'house', wrappedValuesLens], '2 B', _wrappedPerson)
+
+    console.log(_wrappedPerson)
+    expect(_wrappedPerson.address.street.touched).toBe(true)
+    expect(_wrappedPerson.address.house.value).toBe('2 B')
+    expect(_wrappedPerson.address.house.touched).toBe(false)
+    expect(_wrappedPerson.address.house.rules).toEqual([])
+    //L.set(['address', 'street', wrappedValues2], 'Porvoonkatu', _wrappedPerson)
+  })
+  it('Assigining stuff', () => {
+    const paths = pathsFor({ house: '2 B' })
+    let _wrappedPerson = wrappedPerson
+    paths.forEach((pair: any) => {
+      console.log(pair)
+      _wrappedPerson = L.set(['address', pair[0], wrappedValuesLens], pair[1], wrappedPerson)
+    })
+
+    console.log(_wrappedPerson)
+    expect(_wrappedPerson.address.house.value).toBe('2 B')
+    expect(_wrappedPerson.address.house.touched).toBe(false)
+    expect(_wrappedPerson.address.house.rules).toEqual([])
     //L.set(['address', 'street', wrappedValues2], 'Porvoonkatu', _wrappedPerson)
   })
 })

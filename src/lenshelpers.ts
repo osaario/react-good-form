@@ -34,12 +34,15 @@ export const newPrimitives = L.compose(
   L.unless(isWrappedValue)
 )
 
-export const patchLens = L.compose(
-  L.ifElse(
-    isWrappedValue,
-    ['value'],
-    [L.define({ rules: [], touched: false, ref: null, type: wrappedTypeName }), ['value']]
-  )
-)
+export function pathsFor(object: any) {
+  return L.get(L.keyed, object)
+}
+
+export const wrappedValuesLens = L.lazy((rec: any) => {
+  return L.ifElse(_.isObject, L.ifElse(isWrappedValue, ['value'], [L.children, rec]), [
+    L.define({ rules: [], touched: false, ref: null, type: wrappedTypeName }),
+    ['value']
+  ])
+})
 
 export const wrappedIso = L.iso(L.modify(wrappedValuesOrPrimitives, wrapValue), L.modify(wrappedValues, unWrapValue))
