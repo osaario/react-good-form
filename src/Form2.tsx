@@ -16,7 +16,7 @@ type ValidationRules = {
 export type ValidationGroup = { [K in keyof typeof formRules]?: Validation }
 
 export type ValidationProps<E, R> = {
-  scope: LensPathType<E, R>
+  for: LensPathType<E, R>
   children: (validation: ValidationGroup | null) => JSX.Element
 }
 export type TextAreaProps<E, R> = _.Omit<
@@ -24,7 +24,7 @@ export type TextAreaProps<E, R> = _.Omit<
   'ref'
 > &
   ValidationRules & {
-    scope: LensPathType<E, R>
+    for: LensPathType<E, R>
     value?: number | string | boolean
   }
 export type InputProps<E, R> = _.Omit<
@@ -32,13 +32,13 @@ export type InputProps<E, R> = _.Omit<
   'ref'
 > &
   ValidationRules & {
-    scope: LensPathType<E, R>
+    for: LensPathType<E, R>
     value?: number | string | boolean
   }
 
-type LensPathType<E, R> = [E, R]
+type LensPathType<E, R> = [E, R?]
 
-type FormEventType<E, R> = { scope: LensPathType<E, R>; value: any }
+type FormEventType<E, R> = { for: LensPathType<E, R>; value: any }
 
 export interface FormProps<T>
   extends _.Omit<React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>, 'onChange'> {
@@ -126,7 +126,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     return null
   }
   Validation = <E extends keyof T, R extends keyof T[E]>(props: ValidationProps<E, R>) => {
-    const validation = this.getValidationForField(props.scope)
+    const validation = this.getValidationForField(props.for)
     return props.children(validation)
   }
   TextArea = <E extends keyof T, R extends keyof T[E]>(props: TextAreaProps<E, R>) => {
@@ -134,7 +134,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
   }
   Input = <E extends keyof T, R extends keyof T[E]>(props: InputProps<E, R>) => {
     const rules = _.pick(props, _.keys(formRules)) as ValidationRules
-    const lensPath = props.scope
+    const lensPath = props.for
     const value = L.get([lensPath, 'value', L.optional], this.state.value)
     if (!value == null && props.value == null)
       throw Error('Input needs to have value in Form state or provided one in props')
@@ -143,7 +143,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     return (
       <InputInner
         onChange={(e: any) => {
-          const event = { scope: props.scope, value: e.target.value }
+          const event = { for: props.for, value: e.target.value }
           this.onChange(event as any)
         }}
         value={value}
@@ -176,7 +176,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
   onChange = <E extends keyof T>(e: FormEventType<T, E>) => {
     // a hack to know if these are fed
     const event = e as FormEventType<T, E>
-    const value = L.set([event.scope, wrappedValuesLens], event.value, this.state.value)
+    const value = L.set([event.for, wrappedValuesLens], event.value, this.state.value)
     this.setState({ value })
   }
   touchField = (lensPath: any) => {
