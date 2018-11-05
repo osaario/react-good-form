@@ -97,17 +97,19 @@ describe('Lens helpers tests', () => {
     //L.set(['address', 'street', wrappedValues2], 'Porvoonkatu', _wrappedPerson)
   })
   it('Assigining  check mod stuff', () => {
-    const indexes = getIndexesFor({ house: '2 B', city: 'Porvoo' })
+    let _wrappedPerson = L.set(['address', 'street', 'touched'], true, wrappedPerson)
+    const indexes = getIndexesFor({ house: '2 B', city: 'Porvoo', location: { lat: 22, lon: 13353 } })
     console.log({ indexes })
 
-    const _wrappedPerson = indexes.reduce((acc: any, val: any) => {
+    _wrappedPerson = indexes.reduce((acc: any, val: any) => {
       return L.set(['address', val[0], wrappedValuesLens], val[1], acc)
-    }, wrappedPerson)
+    }, _wrappedPerson)
     console.log(_wrappedPerson)
 
     expect(_wrappedPerson.address.house.value).toBe('2 B')
     expect(_wrappedPerson.address.city.value).toBe('Porvoo')
     expect(_wrappedPerson.address.house.touched).toBe(false)
+    expect(_wrappedPerson.address.street.touched).toBe(true)
     expect(_wrappedPerson.address.house.rules).toEqual([])
     //L.set(['address', 'street', wrappedValues2], 'Porvoonkatu', _wrappedPerson)
   })
