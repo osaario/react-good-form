@@ -1,4 +1,4 @@
-import { wrappedIso, isWrappedValue } from '../src/lenshelpers'
+import { wrappedIso } from '../src/lenshelpers'
 const L: any = require('partial.lenses')
 
 /**
@@ -24,6 +24,7 @@ const initialPerson = {
 describe('Lens helpers tests', () => {
   const wrappedPerson = L.get(wrappedIso, initialPerson)
   const unWrappedPerson = L.get(L.inverse(wrappedIso), wrappedPerson)
+  console.log({ unWrappedPerson })
   it('Basic matching', () => {
     expect(wrappedPerson.name.value).toEqual('Hank Da Silva')
     expect(unWrappedPerson.name).toEqual('Hank Da Silva')
@@ -59,15 +60,6 @@ describe('Lens helpers tests', () => {
     let _wrappedPerson = L.set(['address', 'street', 'touched'], true, wrappedPerson)
     expect(_wrappedPerson.address.street.touched).toEqual(true)
 
-    const newWrapped = L.set(
-      ['address', 'street', L.ifElse(isWrappedValue, ['value'], L.optional)],
-      'Porvoonkatu',
-      _wrappedPerson
-    )
-    console.log(newWrapped)
-    expect(newWrapped).toBeTruthy()
-    expect(newWrapped.address.street.value).toEqual('Porvoonkatu')
-
-    expect(newWrapped.address.street.touched).toEqual(true)
+    //L.set(['address', 'street', wrappedValues2], 'Porvoonkatu', _wrappedPerson)
   })
 })
