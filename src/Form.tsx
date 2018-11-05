@@ -262,7 +262,9 @@ export class FormScope<T, S extends keyof T> extends React.Component<
       })*/
     } else {
       const event = e as FormEventType<T[S]>
-      console.log(event)
+      const value = L.assign(this.props.lensPath, event, this.props.value)
+      console.log(event, this.props.lensPath, value)
+      this.props.setState({ value })
       /*
       const rigged = {
         data: event,
