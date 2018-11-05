@@ -15,30 +15,30 @@ type ValidationRules = {
 }
 export type ValidationGroup = { [K in keyof typeof formRules]?: Validation }
 
-export type ValidationProps<T> = {
-  scope: LensPathType<T>
+export type ValidationProps<E, R> = {
+  scope: LensPathType<E, R>
   children: (validation: ValidationGroup | null) => JSX.Element
 }
-export type TextAreaProps<T> = _.Omit<
+export type TextAreaProps<E, R> = _.Omit<
   React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>,
   'ref'
 > &
   ValidationRules & {
-    scope: LensPathType<T>
+    scope: LensPathType<E, R>
     value?: number | string | boolean
   }
-export type InputProps<T> = _.Omit<
+export type InputProps<E, R> = _.Omit<
   React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
   'ref'
 > &
   ValidationRules & {
-    scope: LensPathType<T>
+    scope: LensPathType<E, R>
     value?: number | string | boolean
   }
 
-type LensPathType<T> = [keyof T]
+type LensPathType<E, R> = [E, R]
 
-type FormEventType<T> = { scope: LensPathType<T>; value: any }
+type FormEventType<E, R> = { scope: LensPathType<E, R>; value: any }
 
 export interface FormProps<T>
   extends _.Omit<React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>, 'onChange'> {
@@ -47,12 +47,12 @@ export interface FormProps<T>
   optimized?: boolean
   children: (
     Form: {
-      Input: (props: InputProps<T>) => JSX.Element
-      TextArea: (props: TextAreaProps<T>) => JSX.Element
-      Validation: (props: ValidationProps<T>) => JSX.Element
+      Input: <E extends keyof T, R extends keyof T[E]>(props: InputProps<E, R>) => JSX.Element
+      TextArea: <E extends keyof T, R extends keyof T[E]>(props: TextAreaProps<E, R>) => JSX.Element
+      Validation: <E extends keyof T, R extends keyof T[E]>(props: ValidationProps<E, R>) => JSX.Element
     },
     value: T,
-    onChange: (event: FormEventType<T>) => void
+    onChange: <E extends keyof T>(event: FormEventType<T, E>) => void
   ) => JSX.Element | null
 }
 
@@ -114,7 +114,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     value: L.modify(L.leafs, wrapValue, this.props.value),
     iteration: 0
   }
-  getValidationForField(lens: LensPathType<T>) {
+  getValidationForField(lens: any) {
     // field not touched
     const rules = L.get([lens, 'rules'], this.state.value)
     const touched = L.get([lens, 'touched'], this.state.value)
@@ -125,14 +125,14 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     }
     return null
   }
-  Validation = (props: ValidationProps<T>) => {
+  Validation = <E extends keyof T, R extends keyof T[E]>(props: ValidationProps<E, R>) => {
     const validation = this.getValidationForField(props.scope)
     return props.children(validation)
   }
-  TextArea = (props: TextAreaProps<T>) => {
+  TextArea = <E extends keyof T, R extends keyof T[E]>(props: TextAreaProps<E, R>) => {
     return this.Input({ ...props, _textArea: true } as any)
   }
-  Input = (props: InputProps<T>) => {
+  Input = <E extends keyof T, R extends keyof T[E]>(props: InputProps<E, R>) => {
     const rules = _.pick(props, _.keys(formRules)) as ValidationRules
     const lensPath = props.scope
     const value = L.get([lensPath, 'value', L.optional], this.state.value)
@@ -144,7 +144,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       <InputInner
         onChange={(e: any) => {
           const event = { scope: props.scope, value: e.target.value }
-          this.onChange(event)
+          this.onChange(event as any)
         }}
         value={value}
         _textArea={(props as any)._textArea}
@@ -173,13 +173,13 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       />
     )
   }
-  onChange = (e: FormEventType<T>) => {
+  onChange = <E extends keyof T>(e: FormEventType<T, E>) => {
     // a hack to know if these are fed
-    const event = e as FormEventType<T>
+    const event = e as FormEventType<T, E>
     const value = L.set([event.scope, wrappedValuesLens], event.value, this.state.value)
     this.setState({ value })
   }
-  touchField = (lensPath: LensPathType<T>) => {
+  touchField = (lensPath: any) => {
     /* TODO Check that the path exists or else throw Error */
     if (!L.isDefined(lensPath)) {
       throw Error('Lens path does not exits in touchField: ' + lensPath.toString())
@@ -188,7 +188,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       return { value: L.set([lensPath, 'touched'], true, state.value) }
     })
   }
-  unTouchField = (lensPath: LensPathType<T>) => {
+  unTouchField = (lensPath: any) => {
     /* TODO Check that the path exists or else throw Error */
     if (!L.isDefined(lensPath)) {
       throw Error('Lens path does not exits in unTouchField: ' + lensPath.toString())
@@ -197,7 +197,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       return { value: L.set([lensPath, 'touched'], false, state.value) }
     })
   }
-  removeRule = (lensPath: LensPathType<T>) => {
+  removeRule = (lensPath: any) => {
     /* TODO Check that the path exists or else throw Error */
     if (!L.isDefined(lensPath)) {
       throw Error('Lens path does not exits in removeRule: ' + lensPath.toString())
@@ -206,7 +206,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       return { value: L.remove([lensPath, 'rules', L.optional], state.value) }
     })
   }
-  insertRule = (lensPath: LensPathType<T>, rule: ValidationRules, ref: React.RefObject<HTMLInputElement>) => {
+  insertRule = (lensPath: any, rule: ValidationRules, ref: React.RefObject<HTMLInputElement>) => {
     /* TODO Check that the path exists or else throw Error */
     if (!L.isDefined(lensPath)) {
       throw Error('Lens path does not exits in insertRule: ' + lensPath.toString())
