@@ -249,15 +249,12 @@ export class FormScope<T, S extends keyof T> extends React.Component<
         event.target.value,
         this.props.value
       )
-      console.log('newstate', state)
       this.props.setState(state)
     } else {
       const event = e as FormEventType<T[S]>
-      console.log(event)
       const value = getIndexesFor(event).reduce((acc: any, val: any) => {
         return L.set([this.props.lensPathToRoot, this.props.scope, val[0], wrappedValuesLens], val[1], acc)
       }, this.props.value)
-      console.log(value)
       this.props.setState(value)
     }
   }
