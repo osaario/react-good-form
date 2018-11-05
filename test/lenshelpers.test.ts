@@ -34,6 +34,13 @@ describe('Lens helpers tests', () => {
     expect(wrappedPerson.pets[0].nickName.value).toEqual('Rufus')
     expect(unWrappedPerson.pets[0].nickName).toEqual('Rufus')
   })
+  it('Has all fields matching', () => {
+    expect(wrappedPerson.name.touched).toBe(false)
+    expect(wrappedPerson.name.rules).toEqual([])
+    expect(wrappedPerson.address.city.rules).toEqual([])
+    expect(wrappedPerson.address.city.touched).toEqual(false)
+    expect(wrappedPerson.pets[0].nickName.touched).toEqual(false)
+  })
 
   it('See if partial unwrapping maintains equality', () => {
     expect(L.get(L.inverse(wrappedIso), wrappedPerson.address)).toEqual(unWrappedPerson.address)
@@ -50,19 +57,23 @@ describe('Lens helpers tests', () => {
   })
   it('Inserting new stuff with iso ', () => {
     let _wrappedPerson = L.set(['address', 'district', 'touched'], true, wrappedPerson)
-    const newWrapped = L.assign(['address', 'district'], L.get(wrappedIso, 'Center'), _wrappedPerson)
+    expect(_wrappedPerson.address.district.touched).toEqual(true)
+
+    const newWrapped = L.modify(
+      ['address', 'district'],
+      (wrapped: any) => {
+        console.log(wrapped)
+        return {
+          ...wrapped,
+          value: 'Center'
+        }
+      },
+      _wrappedPerson
+    )
     expect(newWrapped).toBeTruthy()
     expect(newWrapped.address.district.value).toEqual('Center')
-    expect(newWrapped.address.district.touched).toEqual(false)
+
+    expect(newWrapped.address.district.touched).toEqual(true)
     expect(newWrapped.address.district.rules).toEqual([])
-  })
-  it('Inserting new object with iso ', () => {
-    const newWrapped = L.set(['address'], L.get(wrappedIso, { district: 'Center', house: 'A' }), wrappedPerson)
-    expect(newWrapped).toBeTruthy()
-    expect(newWrapped.address.district.value).toBe('Center')
-    expect(newWrapped.address.district.touched).toBe(false)
-    expect(newWrapped.address.house.value).toBe('A')
-    expect(newWrapped.address.house.touched).toBe(false)
-    expect(newWrapped.address.house.rules).toEqual([])
   })
 })
