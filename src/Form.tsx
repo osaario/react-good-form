@@ -2,7 +2,6 @@ import * as React from 'react'
 import * as _ from 'lodash'
 import { formRules, ValidationRuleType, Validation } from './formrules'
 const L: any = require('partial.lenses')
-import { wrapValue, unWrapValue, wrappedValues } from './lenshelpers'
 
 // just a random type name to avoid possible collisions
 
@@ -68,13 +67,15 @@ export interface FormScopePrivateProps<T> {
   rootValue: T
   //
   value: any
+  rules: any
+  touched: any
   iteration: number
   setState: (newState: any) => void
   onInsertRule: (lensPath: LensPathType, rule: ValidationRules, ref: React.RefObject<HTMLInputElement>) => void
   onRemoveRule: (lensPath: LensPathType) => void
   touchField: (lensPath: LensPathType) => void
   unTouchField: (lensPath: LensPathType) => void
-  lensPathToRoot: (string | number)[]
+  lensPath: (string | number)[]
 }
 
 export interface FormProps<T>
@@ -156,18 +157,21 @@ export class FormScope<T, S extends keyof T> extends React.Component<
   */
   getValidationForField(lens: LensPathType) {
     // field not touched
-    const rules = L.get([lens, 'rules'], this.props.value)
-    const touched = L.get([lens, 'touched'], this.props.value)
+    const rules = L.get(lens, this.props.rules)
+    const touched = L.get(lens, this.props.touched)
     // const isFocused = _.includes(this.state.focusedFields, props.name)
     if (touched && rules) {
-      const value = L.get([lens, 'value'], this.props.value)
+      const value = L.get(lens, this.props.value)
       const invalid = getValidationFromRules(rules, value)
       return Object.keys(invalid).length === 0 ? null : invalid
     }
     return null
   }
   getLensPathForField = (field: keyof T[S]) => {
-    return _.concat(this.props.lensPathToRoot, [this.props.scope as any, field])
+    return L.compose(
+      this.props.lensPath,
+      field as any
+    )
   }
   Sub: <B extends keyof T[S]>(
     props: FormSubScopePublicProps<T[S], B> & FormScopeSharedPublicProps<(T[S])[B]>
@@ -179,11 +183,13 @@ export class FormScope<T, S extends keyof T> extends React.Component<
         setState={this.props.setState}
         rootValue={this.props.rootValue[this.props.scope]}
         value={this.props.value}
+        rules={this.props.rules}
+        touched={this.props.touched}
         onInsertRule={this.props.onInsertRule}
         onRemoveRule={this.props.onRemoveRule}
         touchField={this.props.touchField}
         unTouchField={this.props.unTouchField}
-        lensPathToRoot={this.props.lensPathToRoot.concat([this.props.scope as any])}
+        lensPath={this.props.lensPath.concat([props.scope as any])}
         children={(value, a, b) => {
           return props.children(value, a, b)
         }}
@@ -241,16 +247,9 @@ export class FormScope<T, S extends keyof T> extends React.Component<
     if ((e as any).target && _.isObject((e as any).target)) {
       const event = e as any
 
-      const state = L.set(
-        L.compose(
-          this.getLensPathForField(event.target.name),
-          'value'
-        ),
-        event.target.value,
-        this.props.value
-      )
+      const state = L.set(this.getLensPathForField(event.target.name), event.target.value, this.props.value)
       console.log('newstate', state)
-      this.props.setState(state)
+      this.props.setState({ value: state })
     } else if (_.isArray(e)) {
       const events = e as FormEventType<T[S]>[]
       console.log(events)
@@ -264,8 +263,6 @@ export class FormScope<T, S extends keyof T> extends React.Component<
     } else {
       const event = e as FormEventType<T[S]>
       console.log(event)
-      console.log('new', L.modify(L.leafs, wrapValue, event))
-      console.log('old', L.get([this.props.lensPathToRoot, this.props.scope], this.props.value))
       /*
       const rigged = {
         data: event,
@@ -285,13 +282,7 @@ export class FormScope<T, S extends keyof T> extends React.Component<
     }
   }
   render() {
-    const valueOnScope = L.get(
-      L.compose(
-        this.props.lensPathToRoot,
-        [this.props.scope]
-      ),
-      this.props.value
-    )
+    const valueOnScope = this.props.lensPath === [] ? this.props.value : L.get(this.props.lensPath, this.props.value)
     return (
       <React.Fragment>
         {this.props.children(
@@ -301,7 +292,7 @@ export class FormScope<T, S extends keyof T> extends React.Component<
             Validation: this.Validation,
             Sub: this.Sub
           },
-          L.modify(wrappedValues, unWrapValue, valueOnScope),
+          valueOnScope,
           this.riggedOnChange
         )}
       </React.Fragment>
@@ -311,13 +302,19 @@ export class FormScope<T, S extends keyof T> extends React.Component<
 
 export interface FormState<T> {
   value: T
+  touched: any
+  rules: any
+  refs: any
   iteration: 0
 }
 
 export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
   state: FormState<T> = {
     // no pricings yet registered so lets just cast this
-    value: L.modify(L.leafs, wrapValue, this.props.value),
+    value: this.props.value,
+    touched: {},
+    rules: {},
+    refs: {},
     iteration: 0
   }
   touchField = (lensPath: LensPathType) => {
@@ -326,7 +323,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       throw Error('Lens path does not exits in touchField: ' + lensPath.toString())
     }
     this.setState(state => {
-      return L.set([lensPath, 'touched'], true, state)
+      return { touched: L.set([lensPath, 'touched'], true, state.touched) }
     })
   }
   unTouchField = (lensPath: LensPathType) => {
@@ -335,7 +332,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       throw Error('Lens path does not exits in unTouchField: ' + lensPath.toString())
     }
     this.setState(state => {
-      return L.set([lensPath, 'touched'], false, state)
+      return { touched: L.set([lensPath, 'touched'], false, state.touched) }
     })
   }
   removeRule = (lensPath: LensPathType) => {
@@ -344,7 +341,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       throw Error('Lens path does not exits in removeRule: ' + lensPath.toString())
     }
     this.setState(state => {
-      return L.remove([lensPath, 'rules', L.optional], state)
+      return { rules: L.remove([lensPath, 'rules', L.optional], state.rules) }
     })
   }
   insertRule = (lensPath: LensPathType, rule: ValidationRules, ref: React.RefObject<HTMLInputElement>) => {
@@ -353,7 +350,10 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       throw Error('Lens path does not exits in insertRule: ' + lensPath.toString())
     }
     this.setState(state => {
-      return L.set([lensPath, 'ref'], ref, L.set([lensPath, 'rules'], rule, state))
+      return { rules: L.set(lensPath, rule, state.rules) }
+    })
+    this.setState(state => {
+      return { refs: L.set(lensPath, ref, state.refs) }
     })
   }
   Root: (props: FormScopeSharedPublicProps<T>) => JSX.Element = props => {
@@ -362,7 +362,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
         {...props}
         iteration={this.state.iteration}
         rootValue={this.state}
-        value={this.state}
+        value={this.state.value}
         onInsertRule={this.insertRule}
         setState={(state: any) => {
           this.setState(state)
@@ -370,56 +370,23 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
         onRemoveRule={this.removeRule}
         touchField={this.touchField}
         unTouchField={this.unTouchField}
-        lensPathToRoot={[]}
+        lensPath={[]}
+        touched={this.state.touched}
+        rules={this.state.rules}
         scope="value"
       />
     )
-  }
-  handleFieldChange = (e: any) => {
-    let arr: any[]
-    if (_.isArray(e)) {
-      arr = _.flatten(
-        e.map((ee, idx) => {
-          return _.map(ee.data, (value, key) => {
-            return {
-              value,
-              lens: ee.rootLens.concat([idx, key])
-            }
-          })
-        })
-      )
-    } else {
-      arr = _.map(e.data, (value, key) => {
-        return {
-          value: value,
-          lens: e.rootLens.concat([key])
-        }
-      })
-    }
-    this.setState(state => {
-      return arr.reduce((agg, e) => {
-        if (!L.isDefined(e.lens, state)) {
-          return L.set([e.lens], wrapValue(e.value), agg)
-        } else {
-          if (!L.isDefined([e.lens, 'value'], state)) {
-            // if (this.props.allowUndefinedPaths) {
-            console.warn('Undefined form field value: ' + e.lens.toString())
-            //  } else {
-            //   throw Error('Undefined form field value: ' + e.lens.toString())
-            //   }
-          }
-          return L.set([e.lens, 'value'], e.value, agg)
-        }
-      }, state)
-    })
   }
   componentDidUpdate(prevProps: any) {
     if (prevProps.value !== this.props.value && JSON.stringify(prevProps.value) !== JSON.stringify(this.props.value)) {
       // Do a JSON parse to check this
       this.setState((state: any) => {
         return {
-          value: L.modify(L.leafs, wrapValue, this.props.value),
-          iteration: state.iteration + 1
+          value: this.props.value,
+          iteration: state.iteration + 1,
+          touched: {},
+          refs: {},
+          rules: {}
         }
       })
     }
@@ -432,6 +399,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
         onSubmit={(e: any) => {
           e.preventDefault()
           e.stopPropagation()
+          /*
           const invalidFieldsLens = L.compose(
             wrappedValues,
             L.when((wv: any) => {
@@ -448,6 +416,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
           } else {
             this.props.onChange(L.modify(wrappedValues, unWrapValue, this.state.value))
           }
+          */
         }}
       >
         {this.props.children({
