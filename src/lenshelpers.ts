@@ -26,7 +26,8 @@ export const wrappedValuesOrPrimitives = L.lazy((rec: any) => {
 
 export const wrappedValues = L.compose(
   wrappedValuesOrPrimitives,
-  L.when(isWrappedValue)
+  L.when(isWrappedValue),
+  ['value']
 )
 
 export const newPrimitives = L.compose(
@@ -34,4 +35,9 @@ export const newPrimitives = L.compose(
   L.unless(isWrappedValue)
 )
 
-export const wrappedIso = L.iso(L.modify(newPrimitives, wrapValue), L.modify(wrappedValues, unWrapValue))
+export const wrappedValues2 = L.compose(
+  wrappedValuesOrPrimitives,
+  L.ifElse(isWrappedValue, ['value'], L.optional)
+)
+
+export const wrappedIso = L.iso(L.set(newPrimitives, wrapValue), L.get(wrappedValues))

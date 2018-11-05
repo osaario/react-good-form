@@ -1,4 +1,4 @@
-import { wrappedIso } from '../src/lenshelpers'
+import { wrappedIso, isWrappedValue } from '../src/lenshelpers'
 const L: any = require('partial.lenses')
 
 /**
@@ -56,24 +56,18 @@ describe('Lens helpers tests', () => {
     expect(L.get(L.inverse(wrappedIso), newWrapped.address) !== unWrappedPerson.address).toBeTruthy()
   })
   it('Inserting new stuff with iso ', () => {
-    let _wrappedPerson = L.set(['address', 'district', 'touched'], true, wrappedPerson)
-    expect(_wrappedPerson.address.district.touched).toEqual(true)
+    let _wrappedPerson = L.set(['address', 'street', 'touched'], true, wrappedPerson)
+    expect(_wrappedPerson.address.street.touched).toEqual(true)
 
-    const newWrapped = L.modify(
-      ['address', 'district'],
-      (wrapped: any) => {
-        console.log(wrapped)
-        return {
-          ...wrapped,
-          value: 'Center'
-        }
-      },
+    const newWrapped = L.set(
+      ['address', 'street', L.ifElse(isWrappedValue, ['value'], L.optional)],
+      'Porvoonkatu',
       _wrappedPerson
     )
+    console.log(newWrapped)
     expect(newWrapped).toBeTruthy()
-    expect(newWrapped.address.district.value).toEqual('Center')
+    expect(newWrapped.address.street.value).toEqual('Porvoonkatu')
 
-    expect(newWrapped.address.district.touched).toEqual(true)
-    expect(newWrapped.address.district.rules).toEqual([])
+    expect(newWrapped.address.street.touched).toEqual(true)
   })
 })
