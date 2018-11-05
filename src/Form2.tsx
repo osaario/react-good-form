@@ -55,7 +55,7 @@ export interface FormProps<T>
       Validation: (props: ValidationProps<T>) => JSX.Element
     },
     value: T,
-    onChange: (e: FormEventType<T>) => void
+    onChange: (scope: LensPathType, e: FormEventType<T>) => void
   ) => JSX.Element | null
 }
 
@@ -146,7 +146,9 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       throw Error('Cant have rules on a non modifiable field')
     return (
       <InputInner
-        onChange={this.onChange}
+        onChange={(e: any) => {
+          this.onChange(props.scope, e)
+        }}
         value={value}
         _textArea={(props as any)._textArea}
         {..._.omit(_.omit(props, 'ref'), _.keys(formRules))}
@@ -175,13 +177,14 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       />
     )
   }
-  onChange = (e: React.FormEvent<any> | FormEventType<T> | FormEventType<T>[]) => {
+  onChange = (scope: LensPathType, e: React.FormEvent<any> | FormEventType<T> | FormEventType<T>[]) => {
     // a hack to know if these are fed
     if ((e as any).target && _.isObject((e as any).target)) {
       const event = e as any
 
       const value = L.set(
         L.compose(
+          scope,
           event.target.name,
           'value'
         ),
@@ -192,7 +195,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     } else {
       const event = e as FormEventType<T>
       const value = getIndexesFor(event).reduce((acc: any, val: any) => {
-        return L.set([val[0], wrappedValuesLens], val[1], acc)
+        return L.set([scope, val[0], wrappedValuesLens], val[1], acc)
       }, this.state.value)
       this.setState({ value })
     }
