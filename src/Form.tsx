@@ -251,16 +251,6 @@ export class FormScope<T, S extends keyof T> extends React.Component<
       )
       console.log('newstate', state)
       this.props.setState(state)
-    } else if (_.isArray(e)) {
-      const events = e as FormEventType<T[S]>[]
-      console.log(events)
-      /*
-      const rigged = events.map(event => {
-        return {
-          data: event,
-          rootLens: this.props.lensPathToRoot.concat([this.props.scope as any])
-        }
-      })*/
     } else {
       const event = e as FormEventType<T[S]>
       console.log(event)
@@ -269,23 +259,6 @@ export class FormScope<T, S extends keyof T> extends React.Component<
       }, this.props.value)
       console.log(value)
       this.props.setState(value)
-
-      /*
-      const rigged = {
-        data: event,
-        rootLens: this.props.lensPathToRoot.concat([this.props.scope as any])
-      }
-      const state = L.set(
-        L.compose(
-          this.getLensPathForField(event.target.name),
-          'value'
-        ),
-        event,
-        this.props.value
-      )
-      console.log('newstate', state)
-      this.props.setState(state)
-      */
     }
   }
   render() {
