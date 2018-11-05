@@ -38,11 +38,10 @@ export function pathsFor(object: any) {
   return L.get(L.keyed, object)
 }
 
-export const wrappedValuesLens = L.lazy((rec: any) => {
-  return L.ifElse(_.isObject, L.ifElse(isWrappedValue, ['value'], [L.children, rec]), [
-    L.define({ rules: [], touched: false, ref: null, type: wrappedTypeName }),
-    ['value']
-  ])
-})
+export const wrappedValuesLens = L.ifElse(
+  isWrappedValue,
+  ['value'],
+  [L.define({ rules: [], touched: false, ref: null, type: wrappedTypeName }), 'value']
+)
 
 export const wrappedIso = L.iso(L.modify(L.leafs, wrapValue), L.modify(wrappedValues, unWrapValue))
