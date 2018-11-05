@@ -1,4 +1,4 @@
-import { wrappedIso } from '../src/lenshelpers'
+import { wrappedIso, patchLens } from '../src/lenshelpers'
 const L: any = require('partial.lenses')
 
 /**
@@ -60,6 +60,11 @@ describe('Lens helpers tests', () => {
     let _wrappedPerson = L.set(['address', 'street', 'touched'], true, wrappedPerson)
     expect(_wrappedPerson.address.street.touched).toEqual(true)
 
+    _wrappedPerson = L.set(['address', 'street', patchLens], 'Porvoonkatu', _wrappedPerson)
+
+    console.log(_wrappedPerson)
+    expect(_wrappedPerson.address.street.touched).toBe(true)
+    expect(_wrappedPerson.address.street.value).toBe('Porvoonkatu')
     //L.set(['address', 'street', wrappedValues2], 'Porvoonkatu', _wrappedPerson)
   })
 })

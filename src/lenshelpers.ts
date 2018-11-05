@@ -34,8 +34,7 @@ export const newPrimitives = L.compose(
   L.unless(isWrappedValue)
 )
 
-export const wrappedValues2 = L.compose(
-  wrappedValuesOrPrimitives,
+export const patchLens = L.compose(
   L.ifElse(
     isWrappedValue,
     ['value'],
@@ -43,4 +42,4 @@ export const wrappedValues2 = L.compose(
   )
 )
 
-export const wrappedIso = L.iso(L.modify(newPrimitives, wrapValue), L.modify(wrappedValues, unWrapValue))
+export const wrappedIso = L.iso(L.modify(wrappedValuesOrPrimitives, wrapValue), L.modify(wrappedValues, unWrapValue))
