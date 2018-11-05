@@ -1,4 +1,5 @@
-import { wrappedIso, wrappedValuesLens, pathsFor } from '../src/lenshelpers'
+import { wrappedIso, wrappedValuesLens } from '../src/lenshelpers'
+import * as _ from 'lodash'
 const L: any = require('partial.lenses')
 
 /**
@@ -50,7 +51,7 @@ describe('Lens helpers tests', () => {
     expect(L.get(['pets', L.inverse(wrappedIso)], wrappedPerson)[0]).toEqual(unWrappedPerson.pets[0])
   })
   it('Setting stuff with iso ', () => {
-    const newWrapped = L.set(['address', 'street', L.inverse(wrappedIso)], 'Porvoonkatu', wrappedPerson)
+    const newWrapped = L.set(['address', 'street'], L.get(wrappedIso, 'Porvoonkatu'), wrappedPerson)
     expect(newWrapped).toBeTruthy()
     expect(newWrapped.address.street.value).toEqual('Porvoonkatu')
 
@@ -81,14 +82,18 @@ describe('Lens helpers tests', () => {
     //L.set(['address', 'street', wrappedValues2], 'Porvoonkatu', _wrappedPerson)
   })
   it('Assigining stuff', () => {
-    const paths = pathsFor({ house: '2 B', city: 'Porvoo' })
-    let _wrappedPerson = wrappedPerson
-    paths.forEach((pair: any) => {
-      console.log(pair)
-      _wrappedPerson = L.set(['address', pair[0], wrappedValuesLens], pair[1], _wrappedPerson)
-    })
+    const indexes = L.collectAs(
+      (value: any, path: any) => [L.collect(L.flatten, path), value],
+      L.lazy((rec: any) => L.ifElse(_.isObject, [L.joinIx(L.children), rec], [])),
+      { house: '2 B', city: 'Porvoo' }
+    )
+    console.log({ indexes })
 
+    const _wrappedPerson = indexes.reduce((acc: any, val: any) => {
+      return L.set(['address', val[0], wrappedValuesLens], val[1], acc)
+    }, wrappedPerson)
     console.log(_wrappedPerson)
+
     expect(_wrappedPerson.address.house.value).toBe('2 B')
     expect(_wrappedPerson.address.city.value).toBe('Porvoo')
     expect(_wrappedPerson.address.house.touched).toBe(false)

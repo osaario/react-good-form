@@ -45,4 +45,4 @@ export const wrappedValuesLens = L.lazy((rec: any) => {
   ])
 })
 
-export const wrappedIso = L.iso(L.modify(wrappedValuesOrPrimitives, wrapValue), L.modify(wrappedValues, unWrapValue))
+export const wrappedIso = L.iso(L.modify(L.leafs, wrapValue), L.modify(wrappedValues, unWrapValue))
