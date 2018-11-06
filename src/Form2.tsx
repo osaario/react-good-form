@@ -4,8 +4,6 @@ import { formRules, ValidationRuleType, Validation } from './formrules'
 const L: any = require('partial.lenses')
 import { wrapValue, unWrapValue, wrappedValues, wrappedValuesLens } from './lenshelpers'
 
-// just a random type name to avoid possible collisions
-
 type ValidationRules = {
   [P in keyof typeof formRules]?: (typeof formRules)[P] extends ValidationRuleType<boolean>
     ? boolean
@@ -36,7 +34,7 @@ export type InputProps<E, R> = _.Omit<
     value?: number | string | boolean
   }
 
-type LensPathType<E, R> = [E, R?]
+type LensPathType<E, R> = R extends string ? [E, R] : E
 
 type FormEventType<E, R> = { for: LensPathType<E, R>; value: any }
 
