@@ -216,7 +216,14 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
   ) => {
     // a hack to know if these are fed
     if (_.isObject(event.value) || _.isArray(event.value)) {
-      const value = getIndexesFor(event.value).reduce((acc: any, val: any) => {
+      const oldIndexes = getIndexesFor(L.get([event.for, L.inverse(wrappedIso)], this.state.value))
+      const newIndexes = getIndexesFor(event.value)
+      if (JSON.stringify(oldIndexes.map((v: any) => v[0])) !== JSON.stringify(newIndexes.map((v: any) => v[0]))) {
+        console.error(
+          'Detected a change to datastructure, removing elements or changing array order leads to undefined behaviour'
+        )
+      }
+      const value = newIndexes.reduce((acc: any, val: any) => {
         console.log(val)
         return L.set([event.for, val[0], wrappedValuesLens], val[1], acc)
       }, this.state.value)
