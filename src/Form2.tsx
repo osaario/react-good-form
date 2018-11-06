@@ -38,7 +38,7 @@ type LensPathType<T, E extends keyof T, R extends keyof T[E], S extends keyof (T
   | object
   | Array<any>)
   ? (T[E])[R] extends (object | Array<any>) ? [E, R, S] : [E, R]
-  : E
+  : (E | [E])
 type FormEventType<T, E extends keyof T, R extends keyof T[E], S extends keyof (T[E])[R]> = {
   for: LensPathType<T, E, R, S>
   value: any
