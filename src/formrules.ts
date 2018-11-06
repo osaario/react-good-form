@@ -95,4 +95,3 @@ export const phone: ValidationRuleType<boolean> = (value, ruleValue, S) => {
 }
 
 */
-export const formRules = { notEmpty, minLength, min, max, maxLength, email, regExp }

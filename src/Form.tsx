@@ -1,16 +1,29 @@
 import * as React from 'react'
 import * as _ from 'lodash'
-import { formRules, ValidationRuleType, Validation } from './formrules'
+import { ValidationRuleType, Validation, notEmpty, minLength, min, max, maxLength, email, regExp } from './formrules'
 const L: any = require('partial.lenses')
 import { wrappedIso, wrappedValuesLens, getIndexesFor, wrappedValues } from './lenshelpers'
 
-type ValidationRules = {
+const formRules = { notEmpty, minLength, maxLength, email, regExp }
+const numberRules = { min, max }
+
+type StringRules = {
   [P in keyof typeof formRules]?: (typeof formRules)[P] extends ValidationRuleType<boolean>
     ? boolean
     : (typeof formRules)[P] extends ValidationRuleType<number>
       ? number
       : (typeof formRules)[P] extends ValidationRuleType<string> ? string : RegExp
 }
+
+type NumberInputRules = {
+  [P in keyof typeof numberRules]?: (typeof numberRules)[P] extends ValidationRuleType<boolean>
+    ? boolean
+    : (typeof numberRules)[P] extends ValidationRuleType<number>
+      ? number
+      : (typeof numberRules)[P] extends ValidationRuleType<string> ? string : RegExp
+}
+
+type ValidationRules = NumberInputRules | StringRules
 export type ValidationGroup = { [K in keyof typeof formRules]?: Validation }
 
 export type ValidationProps<
@@ -30,7 +43,18 @@ export type TextAreaProps<
   S extends keyof T[A][U],
   K extends keyof T[A][U][S]
 > = _.Omit<React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>, 'ref'> &
-  ValidationRules & {
+  StringRules & {
+    for: LensPathType<T, A, U, S, K>
+    value?: number | string | boolean
+  }
+export type NumberInputProps<
+  T,
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
+> = _.Omit<React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, 'ref'> &
+  NumberInputRules & {
     for: LensPathType<T, A, U, S, K>
     value?: number | string | boolean
   }
@@ -41,7 +65,7 @@ export type InputProps<
   S extends keyof T[A][U],
   K extends keyof T[A][U][S]
 > = _.Omit<React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, 'ref'> &
-  ValidationRules & {
+  StringRules & {
     for: LensPathType<T, A, U, S, K>
     value?: number | string | boolean
   }
@@ -74,6 +98,9 @@ export interface FormProps<T>
       Input: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
         props: InputProps<T, A, U, S, K>
       ) => JSX.Element
+      NumberInput: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        props: NumberInputProps<T, A, U, S, K>
+      ) => JSX.Element
       TextArea: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
         props: TextAreaProps<T, A, U, S, K>
       ) => JSX.Element
@@ -101,9 +128,13 @@ class InputInner extends React.Component<
   ref = React.createRef<any>()
   render() {
     if (this.props._textArea) {
-      return <textarea ref={this.ref as any} {..._.omit(this.props, ['onDidMount', 'onWillUnmount', '_textArea'])} />
+      return (
+        <textarea ref={this.ref as any} {..._.omit(this.props, ['onDidMount', 'onWillUnmount', '_textArea', 'for'])} />
+      )
     } else {
-      return <input ref={this.ref as any} {..._.omit(this.props, ['onDidMount', 'onWillUnmount', '_textArea'])} />
+      return (
+        <input ref={this.ref as any} {..._.omit(this.props, ['onDidMount', 'onWillUnmount', '_textArea', 'for'])} />
+      )
     }
   }
   componentDidMount() {
@@ -121,7 +152,7 @@ function getValidationFromRules(rules: any, value: any): ValidationGroup {
   const validationsForField = Object.keys(withoutRef)
     .map(key => {
       const ruleValue = withoutRef[key]
-      const validation = (formRules as any)[key as keyof typeof formRules](value, ruleValue as any)
+      const validation = ({ ...formRules, ...numberRules } as any)[key as any](value, ruleValue as any)
       return { validation, key }
     })
     .filter(v => !!v.validation)
@@ -139,7 +170,7 @@ export interface FormState<T> {
   value: T
   iteration: 0
 }
-
+const omitFromInputs = ['ref'].concat(_.keys(formRules)).concat(_.keys(numberRules))
 export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
   state: FormState<T> = {
     // no pricings yet registered so lets just cast this
@@ -168,10 +199,18 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
   ) => {
     return this.Input({ ...props, _textArea: true } as any)
   }
+  NumberInput = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    props: NumberInputProps<T, A, U, S, K>
+  ) => {
+    return this.Input({ ...props, type: 'number' } as any)
+  }
   Input = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     props: InputProps<T, A, U, S, K>
   ) => {
-    const rules = _.pick(props, _.keys(formRules)) as ValidationRules
+    let rules = _.pick(props, _.keys(formRules)) as StringRules
+    if (props.type === 'number') {
+      rules = _.pick(props, _.keys(numberRules)) as any
+    }
     const lensPath = props.for
     const value = L.get([lensPath, 'value', L.optional], this.state.value)
     if (!value == null && props.value == null)
@@ -181,12 +220,15 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     return (
       <InputInner
         onChange={(e: any) => {
-          const event = { for: props.for, value: e.target.value }
+          const event = {
+            for: props.for,
+            value: props.type === 'number' ? parseInt(e.target.value, 10) : e.target.value
+          }
           this.onChange(event as any)
         }}
         value={value}
         _textArea={(props as any)._textArea}
-        {..._.omit(_.omit(props, 'ref'), _.keys(formRules))}
+        {..._.omit(props, omitFromInputs)}
         key={this.state.iteration + JSON.stringify(lensPath) + JSON.stringify(rules)}
         onDidMount={ref => {
           this.insertRule(lensPath as any, rules, ref)
@@ -309,6 +351,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
           {this.props.children(
             {
               Input: this.Input,
+              NumberInput: this.NumberInput,
               TextArea: this.TextArea,
               Validation: this.Validation
             },
