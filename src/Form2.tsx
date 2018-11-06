@@ -37,7 +37,7 @@ export type InputProps<T, E extends keyof T, R extends keyof T[E], S extends key
 type LensPathType<T, E extends keyof T, R extends keyof T[E], S extends keyof (T[E])[R]> = T[E] extends (
   | object
   | Array<any>)
-  ? [E, R?, S?]
+  ? (T[E])[R] extends (object | Array<any>) ? [E, R, S] : [E, R]
   : E
 type FormEventType<T, E extends keyof T, R extends keyof T[E], S extends keyof (T[E])[R]> = {
   for: LensPathType<T, E, R, S>
