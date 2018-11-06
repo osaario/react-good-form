@@ -34,10 +34,11 @@ export type InputProps<T, E extends keyof T, R extends keyof T[E], S extends key
     value?: number | string | boolean
   }
 
-type LensPathType<T, E extends keyof T, R extends keyof T[E], S extends keyof (T[E])[R]> = (T[E])[R] extends object
-  ? (((T[E])[R])[S] extends any ? [E, R, S] : [E, R])
+type LensPathType<T, E extends keyof T, R extends keyof T[E], S extends keyof (T[E])[R]> = T[E] extends (
+  | object
+  | Array<any>)
+  ? [E, R?, S?]
   : E
-
 type FormEventType<T, E extends keyof T, R extends keyof T[E], S extends keyof (T[E])[R]> = {
   for: LensPathType<T, E, R, S>
   value: any
