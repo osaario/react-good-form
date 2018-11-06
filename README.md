@@ -87,6 +87,9 @@ You can create arbitary rules easily with *regular expressions* or just by writi
     </div>
     )}
 </Validation>
+```
+
+```JSX
 <Validation for="password">
     {validation => (
     <div style={{ color: validation ? "red" : undefined }}>
