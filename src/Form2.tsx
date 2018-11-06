@@ -2,7 +2,7 @@ import * as React from 'react'
 import * as _ from 'lodash'
 import { formRules, ValidationRuleType, Validation } from './formrules'
 const L: any = require('partial.lenses')
-import { wrapValue, unWrapValue, wrappedValues, wrappedValuesLens } from './lenshelpers'
+import { wrapValue, unWrapValue, wrappedValues, wrappedValuesLens, getIndexesFor } from './lenshelpers'
 
 type ValidationRules = {
   [P in keyof typeof formRules]?: (typeof formRules)[P] extends ValidationRuleType<boolean>
@@ -212,12 +212,19 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     )
   }
   onChange = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
-    e: FormEventType<T, A, U, S, K>
+    event: FormEventType<T, A, U, S, K>
   ) => {
     // a hack to know if these are fed
-    const event = e as FormEventType<T, A, U, S, K>
-    const value = L.set([event.for, wrappedValuesLens], event.value, this.state.value)
-    this.setState({ value })
+    if (_.isObject(event.value) || _.isArray(event.value)) {
+      const value = getIndexesFor(event.value).reduce((acc: any, val: any) => {
+        console.log(val)
+        return L.set([event.for, val[0], wrappedValuesLens], val[1], acc)
+      }, this.state.value)
+      this.setState({ value })
+    } else {
+      const value = L.set([event.for, wrappedValuesLens], event.value, this.state.value)
+      this.setState({ value })
+    }
   }
   touchField = (lensPath: any) => {
     /* TODO Check that the path exists or else throw Error */
