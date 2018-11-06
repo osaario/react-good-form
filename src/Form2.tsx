@@ -13,30 +13,30 @@ type ValidationRules = {
 }
 export type ValidationGroup = { [K in keyof typeof formRules]?: Validation }
 
-export type ValidationProps<E, R> = {
-  for: LensPathType<E, R>
+export type ValidationProps<E, R, S> = {
+  for: LensPathType<E, R, S>
   children: (validation: ValidationGroup | null) => JSX.Element
 }
-export type TextAreaProps<E, R> = _.Omit<
+export type TextAreaProps<E, R, S> = _.Omit<
   React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>,
   'ref'
 > &
   ValidationRules & {
-    for: LensPathType<E, R>
+    for: LensPathType<E, R, S>
     value?: number | string | boolean
   }
-export type InputProps<E, R> = _.Omit<
+export type InputProps<E, R, S> = _.Omit<
   React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
   'ref'
 > &
   ValidationRules & {
-    for: LensPathType<E, R>
+    for: LensPathType<E, R, S>
     value?: number | string | boolean
   }
 
-type LensPathType<E, R> = R extends string ? [E, R] : E
+type LensPathType<E, R, S> = R extends string ? (S extends string ? [E, R, S] : [E, R]) : E
 
-type FormEventType<E, R> = { for: LensPathType<E, R>; value: any }
+type FormEventType<E, R, S> = { for: LensPathType<E, R, S>; value: any }
 
 export interface FormProps<T>
   extends _.Omit<React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>, 'onChange'> {
@@ -45,12 +45,20 @@ export interface FormProps<T>
   optimized?: boolean
   children: (
     Form: {
-      Input: <E extends keyof T, R extends keyof T[E]>(props: InputProps<E, R>) => JSX.Element
-      TextArea: <E extends keyof T, R extends keyof T[E]>(props: TextAreaProps<E, R>) => JSX.Element
-      Validation: <E extends keyof T, R extends keyof T[E]>(props: ValidationProps<E, R>) => JSX.Element
+      Input: <E extends keyof T, R extends keyof T[E], S extends keyof (T[E])[R]>(
+        props: InputProps<E, R, S>
+      ) => JSX.Element
+      TextArea: <E extends keyof T, R extends keyof T[E], S extends keyof (T[E])[R]>(
+        props: TextAreaProps<E, R, S>
+      ) => JSX.Element
+      Validation: <E extends keyof T, R extends keyof T[E], S extends keyof (T[E])[R]>(
+        props: ValidationProps<E, R, S>
+      ) => JSX.Element
     },
     value: T,
-    onChange: <E extends keyof T>(event: FormEventType<T, E>) => void
+    onChange: <E extends keyof T, R extends keyof T[E], S extends keyof (T[E])[R]>(
+      event: FormEventType<E, R, S>
+    ) => void
   ) => JSX.Element | null
 }
 
@@ -123,14 +131,16 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     }
     return null
   }
-  Validation = <E extends keyof T, R extends keyof T[E]>(props: ValidationProps<E, R>) => {
+  Validation = <E extends keyof T, R extends keyof T[E], S extends keyof (T[E])[R]>(
+    props: ValidationProps<E, R, S>
+  ) => {
     const validation = this.getValidationForField(props.for)
     return props.children(validation)
   }
-  TextArea = <E extends keyof T, R extends keyof T[E]>(props: TextAreaProps<E, R>) => {
+  TextArea = <E extends keyof T, R extends keyof T[E], S extends keyof (T[E])[R]>(props: TextAreaProps<E, R, S>) => {
     return this.Input({ ...props, _textArea: true } as any)
   }
-  Input = <E extends keyof T, R extends keyof T[E]>(props: InputProps<E, R>) => {
+  Input = <E extends keyof T, R extends keyof T[E], S extends keyof (T[E])[R]>(props: InputProps<E, R, S>) => {
     const rules = _.pick(props, _.keys(formRules)) as ValidationRules
     const lensPath = props.for
     const value = L.get([lensPath, 'value', L.optional], this.state.value)
@@ -171,9 +181,9 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       />
     )
   }
-  onChange = <E extends keyof T>(e: FormEventType<T, E>) => {
+  onChange = <E extends keyof T, R extends keyof T[E], S extends keyof (T[E])[R]>(e: FormEventType<E, R, S>) => {
     // a hack to know if these are fed
-    const event = e as FormEventType<T, E>
+    const event = e as FormEventType<E, R, S>
     const value = L.set([event.for, wrappedValuesLens], event.value, this.state.value)
     this.setState({ value })
   }
