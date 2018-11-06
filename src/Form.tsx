@@ -1,18 +1,34 @@
 import * as React from 'react'
 import * as _ from 'lodash'
-import { ValidationRuleType, Validation, notEmpty, minLength, min, max, maxLength, email, regExp } from './formrules'
+import {
+  ValidationRuleType,
+  Validation,
+  notEmpty,
+  minLength,
+  min,
+  max,
+  maxLength,
+  numberRule,
+  rule,
+  email,
+  regExp,
+  StringFunctionRule,
+  NumberFunctionRule
+} from './formrules'
 const L: any = require('partial.lenses')
 import { wrappedIso, wrappedValuesLens, getIndexesFor, wrappedValues } from './lenshelpers'
 
-const formRules = { notEmpty, minLength, maxLength, email, regExp }
-const numberRules = { min, max }
+const formRules = { notEmpty, minLength, maxLength, email, regExp, rule }
+const numberRules = { min, max, rule: numberRule }
 
 type StringRules = {
   [P in keyof typeof formRules]?: (typeof formRules)[P] extends ValidationRuleType<boolean>
     ? boolean
     : (typeof formRules)[P] extends ValidationRuleType<number>
       ? number
-      : (typeof formRules)[P] extends ValidationRuleType<string> ? string : RegExp
+      : (typeof formRules)[P] extends ValidationRuleType<string>
+        ? string
+        : (typeof formRules)[P] extends ValidationRuleType<RegExp> ? RegExp : StringFunctionRule
 }
 
 type NumberInputRules = {
@@ -20,7 +36,9 @@ type NumberInputRules = {
     ? boolean
     : (typeof numberRules)[P] extends ValidationRuleType<number>
       ? number
-      : (typeof numberRules)[P] extends ValidationRuleType<string> ? string : RegExp
+      : (typeof numberRules)[P] extends ValidationRuleType<string>
+        ? string
+        : (typeof numberRules)[P] extends ValidationRuleType<RegExp> ? RegExp : NumberFunctionRule
 }
 
 type ValidationRules = NumberInputRules | StringRules
