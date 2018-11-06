@@ -15,50 +15,51 @@ export type ValidationGroup = { [K in keyof typeof formRules]?: Validation }
 
 export type ValidationProps<
   T,
-  E extends keyof T,
-  R extends keyof T[E],
-  S extends keyof T[E][R],
-  K extends keyof T[E][R][S]
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
 > = {
-  for: LensPathType<T, E, R, S, K>
+  for: LensPathType<T, A, U, S, K>
   children: (validation: ValidationGroup | null) => JSX.Element
 }
 export type TextAreaProps<
   T,
-  E extends keyof T,
-  R extends keyof T[E],
-  S extends keyof T[E][R],
-  K extends keyof T[E][R][S]
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
 > = _.Omit<React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>, 'ref'> &
   ValidationRules & {
-    for: LensPathType<T, E, R, S, K>
+    for: LensPathType<T, A, U, S, K>
     value?: number | string | boolean
   }
 export type InputProps<
   T,
-  E extends keyof T,
-  R extends keyof T[E],
-  S extends keyof T[E][R],
-  K extends keyof T[E][R][S]
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
 > = _.Omit<React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, 'ref'> &
   ValidationRules & {
-    for: LensPathType<T, E, R, S, K>
+    for: LensPathType<T, A, U, S, K>
     value?: number | string | boolean
   }
 
 type LensPathType<
   T,
-  E extends keyof T,
-  R extends keyof T[E],
-  S extends keyof T[E][R],
-  K extends keyof T[E][R][S]
-> = T[E] extends (object | Array<any>)
-  ? T[E][R] extends (object | Array<any>)
-    ? (T[E][R][S] extends (object | Array<any>) ? [E, R, S, K] : [E, R, S])
-    : [E, R]
-  : (E | [E])
-type FormEventType<T, E extends keyof T, R extends keyof T[E], S extends keyof T[E][R], K extends keyof T[E][R][S]> = {
-  for: LensPathType<T, E, R, S, K>
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
+> = T[A] extends (object | Array<any>)
+  ? T[A][U] extends (object | Array<any>)
+    ? (T[A][U][S] extends (object | Array<any>) ? [A, U, S, K] : [A, U, S])
+    : [A, U]
+  : (A | [A])
+
+type FormEventType<T, A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]> = {
+  for: LensPathType<T, A, U, S, K>
   value: any
 }
 
@@ -69,19 +70,19 @@ export interface FormProps<T>
   optimized?: boolean
   children: (
     Form: {
-      Input: <E extends keyof T, R extends keyof T[E], S extends keyof T[E][R], K extends keyof T[E][R][S]>(
-        props: InputProps<T, E, R, S, K>
+      Input: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        props: InputProps<T, A, U, S, K>
       ) => JSX.Element
-      TextArea: <E extends keyof T, R extends keyof T[E], S extends keyof T[E][R], K extends keyof T[E][R][S]>(
-        props: TextAreaProps<T, E, R, S, K>
+      TextArea: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        props: TextAreaProps<T, A, U, S, K>
       ) => JSX.Element
-      Validation: <E extends keyof T, R extends keyof T[E], S extends keyof T[E][R], K extends keyof T[E][R][S]>(
-        props: ValidationProps<T, E, R, S, K>
+      Validation: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        props: ValidationProps<T, A, U, S, K>
       ) => JSX.Element
     },
     value: T,
-    onChange: <E extends keyof T, R extends keyof T[E], S extends keyof T[E][R], K extends keyof T[E][R][S]>(
-      event: FormEventType<T, E, R, S, K>
+    onChange: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+      event: FormEventType<T, A, U, S, K>
     ) => void
   ) => JSX.Element | null
 }
@@ -155,19 +156,19 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     }
     return null
   }
-  Validation = <E extends keyof T, R extends keyof T[E], S extends keyof T[E][R], K extends keyof T[E][R][S]>(
-    props: ValidationProps<T, E, R, S, K>
+  Validation = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    props: ValidationProps<T, A, U, S, K>
   ) => {
     const validation = this.getValidationForField(props.for)
     return props.children(validation)
   }
-  TextArea = <E extends keyof T, R extends keyof T[E], S extends keyof T[E][R], K extends keyof T[E][R][S]>(
-    props: TextAreaProps<T, E, R, S, K>
+  TextArea = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    props: TextAreaProps<T, A, U, S, K>
   ) => {
     return this.Input({ ...props, _textArea: true } as any)
   }
-  Input = <E extends keyof T, R extends keyof T[E], S extends keyof T[E][R], K extends keyof T[E][R][S]>(
-    props: InputProps<T, E, R, S, K>
+  Input = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    props: InputProps<T, A, U, S, K>
   ) => {
     const rules = _.pick(props, _.keys(formRules)) as ValidationRules
     const lensPath = props.for
@@ -209,11 +210,11 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       />
     )
   }
-  onChange = <E extends keyof T, R extends keyof T[E], S extends keyof T[E][R], K extends keyof T[E][R][S]>(
-    e: FormEventType<T, E, R, S, K>
+  onChange = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    e: FormEventType<T, A, U, S, K>
   ) => {
     // a hack to know if these are fed
-    const event = e as FormEventType<T, E, R, S, K>
+    const event = e as FormEventType<T, A, U, S, K>
     const value = L.set([event.for, wrappedValuesLens], event.value, this.state.value)
     this.setState({ value })
   }
