@@ -66,7 +66,7 @@ export default Login
 
 ## Extendable
 
-You can create arbitary rules easily with *regular expression* or just write your own rule functions.
+You can create arbitary rules easily with *regular expressions* or just by writing your own rule functions.
 
 ```JSX
 <Validation for="email">
