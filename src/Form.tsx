@@ -2,9 +2,7 @@ import * as React from 'react'
 import * as _ from 'lodash'
 import { formRules, ValidationRuleType, Validation } from './formrules'
 const L: any = require('partial.lenses')
-import { wrapValue, unWrapValue, wrappedValues, getIndexesFor, wrappedValuesLens } from './lenshelpers'
-
-// just a random type name to avoid possible collisions
+import { wrappedIso, wrappedValuesLens, getIndexesFor, wrappedValues } from './lenshelpers'
 
 type ValidationRules = {
   [P in keyof typeof formRules]?: (typeof formRules)[P] extends ValidationRuleType<boolean>
@@ -15,78 +13,79 @@ type ValidationRules = {
 }
 export type ValidationGroup = { [K in keyof typeof formRules]?: Validation }
 
-export type ErrorLabelProps<T> = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLDivElement>, HTMLDivElement> & {
-  name: keyof T
-}
-export type ValidationProps<T> = {
-  for: keyof T
+export type ValidationProps<
+  T,
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
+> = {
+  for: LensPathType<T, A, U, S, K>
   children: (validation: ValidationGroup | null) => JSX.Element
 }
-export type TextAreaProps<T> = _.Omit<
-  React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>,
-  'ref'
-> &
+export type TextAreaProps<
+  T,
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
+> = _.Omit<React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>, 'ref'> &
   ValidationRules & {
-    name: keyof T
+    for: LensPathType<T, A, U, S, K>
     value?: number | string | boolean
   }
-export type InputProps<T> = _.Omit<
-  React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
-  'ref'
-> &
+export type InputProps<
+  T,
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
+> = _.Omit<React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, 'ref'> &
   ValidationRules & {
-    name: keyof T
+    for: LensPathType<T, A, U, S, K>
     value?: number | string | boolean
   }
 
-export interface FormSubScopePublicProps<T, S extends keyof T> {
-  scope: S
-}
+type LensPathType<
+  T,
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
+> = T[A] extends (object | Array<any>)
+  ? T[A][U] extends (object | Array<any>)
+    ? (T[A][U][S] extends (object | Array<any>) ? [A, U, S, K] : [A, U, S])
+    : [A, U]
+  : (A | [A])
 
-export interface FormScopeSharedPublicProps<T> {
-  optimized?: boolean
-  children: (
-    Scope: {
-      Sub: <B extends keyof T>(
-        props: FormSubScopePublicProps<T, B> & FormScopeSharedPublicProps<T[B]>
-      ) => JSX.Element | null
-      Input: (props: InputProps<T>) => JSX.Element
-      TextArea: (props: TextAreaProps<T>) => JSX.Element
-      Validation: (props: ValidationProps<T>) => JSX.Element
-    },
-    value: T,
-    handleFieldChange: (e: FormEventType<T>) => void
-  ) => JSX.Element | null
-}
-
-type LensPathType = (string | number)[]
-
-type FormEventType<T> = T extends Array<infer G> ? { [K in keyof G]?: G[K] }[] : { [K in keyof T]?: T[K] }
-
-export interface FormScopePrivateProps<T> {
-  // not really used for anything, just here for type inference
-  rootValue: T
-  //
-  value: any
-  iteration: number
-  setState: (newState: any) => void
-  onInsertRule: (lensPath: LensPathType, rule: ValidationRules, ref: React.RefObject<HTMLInputElement>) => void
-  onRemoveRule: (lensPath: LensPathType) => void
-  touchField: (lensPath: LensPathType) => void
-  unTouchField: (lensPath: LensPathType) => void
-  lensPathToRoot: (string | number)[]
-}
+type FormEventType<T, A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]> =
+  | { value: T[A][U][S][K]; for: [A, U, S, K] }
+  | { value: T[A][U][S]; for: [A, U, S] }
+  | { value: T[A][U]; for: [A, U] }
+  | { value: T[A]; for: [A] }
 
 export interface FormProps<T>
   extends _.Omit<React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>, 'onChange'> {
   value: T
   onChange: (data: T) => void
-  allowUndefinedPaths?: boolean
+  optimized?: boolean
   children: (
     Form: {
-      Root: (props: FormScopeSharedPublicProps<T>) => JSX.Element
-    }
-  ) => JSX.Element
+      Input: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        props: InputProps<T, A, U, S, K>
+      ) => JSX.Element
+      TextArea: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        props: TextAreaProps<T, A, U, S, K>
+      ) => JSX.Element
+      Validation: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        props: ValidationProps<T, A, U, S, K>
+      ) => JSX.Element
+    },
+    value: T,
+    onChange: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+      event: FormEventType<T, A, U, S, K>
+    ) => void
+  ) => JSX.Element | null
 }
 
 class InputInner extends React.Component<
@@ -136,91 +135,68 @@ function getValidationFromRules(rules: any, value: any): ValidationGroup {
   return validationsForField as ValidationGroup
 }
 
-export class FormScope<T, S extends keyof T> extends React.Component<
-  FormScopeSharedPublicProps<T[S]> & FormScopePrivateProps<T> & FormSubScopePublicProps<T, S>
-> {
-  constructor(props: FormScopeSharedPublicProps<T[S]> & FormScopePrivateProps<T> & FormSubScopePublicProps<T, S>) {
-    super(props)
-  }
-  /*
-  shouldComponentUpdate(nextProps: FormScopePrivateProps<T> & FormSubScopePublicProps<T, S>) {
-    // if not optimized scope always return true
-    if (!this.props.optimized) return true
+export interface FormState<T> {
+  value: T
+  iteration: 0
+}
 
-    if (nextProps.scope !== this.props.scope) throw Error('Scope cannot change for sub')
-    if (nextProps.rootValue[nextProps.scope] !== this.props.rootValue[this.props.scope]) {
-      return true
-    }
-    return false
+export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
+  state: FormState<T> = {
+    // no pricings yet registered so lets just cast this
+    value: L.get(wrappedIso, this.props.value),
+    iteration: 0
   }
-  */
-  getValidationForField(lens: LensPathType) {
+  getValidationForField(lens: any) {
     // field not touched
-    const rules = L.get([lens, 'rules'], this.props.value)
-    const touched = L.get([lens, 'touched'], this.props.value)
-    // const isFocused = _.includes(this.state.focusedFields, props.name)
+    const rules = L.get([lens, 'rules'], this.state.value)
+    const touched = L.get([lens, 'touched'], this.state.value)
     if (touched && rules) {
-      const value = L.get([lens, 'value'], this.props.value)
+      const value = L.get([lens, 'value'], this.state.value)
       const invalid = getValidationFromRules(rules, value)
       return Object.keys(invalid).length === 0 ? null : invalid
     }
     return null
   }
-  getLensPathForField = (field: keyof T[S]) => {
-    return _.concat(this.props.lensPathToRoot, [this.props.scope as any, field])
-  }
-  Sub: <B extends keyof T[S]>(
-    props: FormSubScopePublicProps<T[S], B> & FormScopeSharedPublicProps<(T[S])[B]>
-  ) => JSX.Element | null = props => {
-    return (
-      <FormScope
-        {...props}
-        iteration={this.props.iteration}
-        setState={this.props.setState}
-        rootValue={this.props.rootValue[this.props.scope]}
-        value={this.props.value}
-        onInsertRule={this.props.onInsertRule}
-        onRemoveRule={this.props.onRemoveRule}
-        touchField={this.props.touchField}
-        unTouchField={this.props.unTouchField}
-        lensPathToRoot={this.props.lensPathToRoot.concat([this.props.scope as any])}
-        children={(value, a, b) => {
-          return props.children(value, a, b)
-        }}
-      />
-    )
-  }
-  Validation = (props: ValidationProps<T[S]>) => {
-    const validation = this.getValidationForField(this.getLensPathForField(props.for))
+  Validation = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    props: ValidationProps<T, A, U, S, K>
+  ) => {
+    const validation = this.getValidationForField(props.for)
     return props.children(validation)
   }
-  TextArea = (props: TextAreaProps<T[S]>) => {
+  TextArea = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    props: TextAreaProps<T, A, U, S, K>
+  ) => {
     return this.Input({ ...props, _textArea: true } as any)
   }
-  Input = (props: InputProps<T[S]>) => {
+  Input = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    props: InputProps<T, A, U, S, K>
+  ) => {
     const rules = _.pick(props, _.keys(formRules)) as ValidationRules
-    const lensPath = this.getLensPathForField(props.name)
-    const value = L.get([lensPath, 'value', L.optional], this.props.value)
+    const lensPath = props.for
+    const value = L.get([lensPath, 'value', L.optional], this.state.value)
     if (!value == null && props.value == null)
       throw Error('Input needs to have value in Form state or provided one in props')
     if (!_.isEmpty(rules) && (props.disabled || props.readOnly))
       throw Error('Cant have rules on a non modifiable field')
     return (
       <InputInner
-        onChange={this.riggedOnChange}
+        onChange={(e: any) => {
+          const event = { for: props.for, value: e.target.value }
+          this.onChange(event as any)
+        }}
         value={value}
         _textArea={(props as any)._textArea}
         {..._.omit(_.omit(props, 'ref'), _.keys(formRules))}
-        key={this.props.iteration + JSON.stringify(lensPath) + JSON.stringify(rules)}
+        key={this.state.iteration + JSON.stringify(lensPath) + JSON.stringify(rules)}
         onDidMount={ref => {
-          this.props.onInsertRule(lensPath, rules, ref)
+          this.insertRule(lensPath as any, rules, ref)
         }}
         onWillUnmount={() => {
-          this.props.onRemoveRule(lensPath)
+          this.removeRule(lensPath as any)
         }}
         onBlur={() => {
           // touch non number fields on blur
-          this.props.touchField(lensPath)
+          this.touchField(lensPath as any)
         }}
         onFocus={() => {
           /*
@@ -232,129 +208,72 @@ export class FormScope<T, S extends keyof T> extends React.Component<
             })
         } */
         }}
-        name={props.name}
       />
     )
   }
-  riggedOnChange = (e: React.FormEvent<any> | FormEventType<T[S]> | FormEventType<T[S]>[]) => {
+  onChange = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    event: FormEventType<T, A, U, S, K>
+  ) => {
     // a hack to know if these are fed
-    if ((e as any).target && _.isObject((e as any).target)) {
-      const event = e as any
-
-      const state = L.set(
-        L.compose(
-          this.getLensPathForField(event.target.name),
-          'value'
-        ),
-        event.target.value,
-        this.props.value
-      )
-      this.props.setState(state)
+    if (_.isObject(event.value) || _.isArray(event.value)) {
+      const oldIndexes = getIndexesFor(L.get([event.for, L.inverse(wrappedIso)], this.state.value))
+      const newIndexes = getIndexesFor(event.value)
+      if (JSON.stringify(oldIndexes.map((v: any) => v[0])) !== JSON.stringify(newIndexes.map((v: any) => v[0]))) {
+        console.error(
+          'Detected a change to datastructure, removing elements or changing array order leads to undefined behaviour'
+        )
+      }
+      const value = newIndexes.reduce((acc: any, val: any) => {
+        return L.set([event.for, val[0], wrappedValuesLens], val[1], acc)
+      }, this.state.value)
+      this.setState({ value })
     } else {
-      const event = e as FormEventType<T[S]>
-      const value = getIndexesFor(event).reduce((acc: any, val: any) => {
-        return L.set([this.props.lensPathToRoot, this.props.scope, val[0], wrappedValuesLens], val[1], acc)
-      }, this.props.value)
-      this.props.setState(value)
+      const value = L.set([event.for, wrappedValuesLens], event.value, this.state.value)
+      this.setState({ value })
     }
   }
-  render() {
-    const valueOnScope = L.get(
-      L.compose(
-        this.props.lensPathToRoot,
-        [this.props.scope]
-      ),
-      this.props.value
-    )
-    return (
-      <React.Fragment>
-        {this.props.children(
-          {
-            Input: this.Input,
-            TextArea: this.TextArea,
-            Validation: this.Validation,
-            Sub: this.Sub
-          },
-          L.modify(wrappedValues, unWrapValue, valueOnScope),
-          this.riggedOnChange
-        )}
-      </React.Fragment>
-    )
-  }
-}
-
-export interface FormState<T> {
-  value: T
-  iteration: 0
-}
-
-export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
-  state: FormState<T> = {
-    // no pricings yet registered so lets just cast this
-    value: L.modify(L.leafs, wrapValue, this.props.value),
-    iteration: 0
-  }
-  touchField = (lensPath: LensPathType) => {
+  touchField = (lensPath: any) => {
     /* TODO Check that the path exists or else throw Error */
     if (!L.isDefined(lensPath)) {
       throw Error('Lens path does not exits in touchField: ' + lensPath.toString())
     }
     this.setState(state => {
-      return L.set([lensPath, 'touched'], true, state)
+      return { value: L.set([lensPath, 'touched'], true, state.value) }
     })
   }
-  unTouchField = (lensPath: LensPathType) => {
+  unTouchField = (lensPath: any) => {
     /* TODO Check that the path exists or else throw Error */
     if (!L.isDefined(lensPath)) {
       throw Error('Lens path does not exits in unTouchField: ' + lensPath.toString())
     }
     this.setState(state => {
-      return L.set([lensPath, 'touched'], false, state)
+      return { value: L.set([lensPath, 'touched'], false, state.value) }
     })
   }
-  removeRule = (lensPath: LensPathType) => {
+  removeRule = (lensPath: any) => {
     /* TODO Check that the path exists or else throw Error */
     if (!L.isDefined(lensPath)) {
       throw Error('Lens path does not exits in removeRule: ' + lensPath.toString())
     }
     this.setState(state => {
-      return L.remove([lensPath, 'rules', L.optional], state)
+      return { value: L.remove([lensPath, 'rules', L.optional], state.value) }
     })
   }
-  insertRule = (lensPath: LensPathType, rule: ValidationRules, ref: React.RefObject<HTMLInputElement>) => {
+  insertRule = (lensPath: any, rule: ValidationRules, ref: React.RefObject<HTMLInputElement>) => {
     /* TODO Check that the path exists or else throw Error */
     if (!L.isDefined(lensPath)) {
       throw Error('Lens path does not exits in insertRule: ' + lensPath.toString())
     }
     this.setState(state => {
-      return L.set([lensPath, 'ref'], ref, L.set([lensPath, 'rules'], rule, state))
+      return { value: L.set([lensPath, 'ref'], ref, L.set([lensPath, 'rules'], rule, state.value)) }
     })
-  }
-  Root: (props: FormScopeSharedPublicProps<T>) => JSX.Element = props => {
-    return (
-      <FormScope
-        {...props}
-        iteration={this.state.iteration}
-        rootValue={this.state}
-        value={this.state}
-        onInsertRule={this.insertRule}
-        setState={(state: any) => {
-          this.setState(state)
-        }}
-        onRemoveRule={this.removeRule}
-        touchField={this.touchField}
-        unTouchField={this.unTouchField}
-        lensPathToRoot={[]}
-        scope="value"
-      />
-    )
   }
   componentDidUpdate(prevProps: any) {
     if (prevProps.value !== this.props.value && JSON.stringify(prevProps.value) !== JSON.stringify(this.props.value)) {
       // Do a JSON parse to check this
       this.setState((state: any) => {
         return {
-          value: L.modify(L.leafs, wrapValue, this.props.value),
+          value: L.get(wrappedIso, this.props.value),
           iteration: state.iteration + 1
         }
       })
@@ -382,13 +301,21 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
               return L.set([invalidFieldsLens, 'touched'], true, state)
             })
           } else {
-            this.props.onChange(L.modify(wrappedValues, unWrapValue, this.state.value))
+            this.props.onChange(L.get(L.inverse(wrappedIso), this.state.value))
           }
         }}
       >
-        {this.props.children({
-          Root: this.Root
-        })}
+        <React.Fragment>
+          {this.props.children(
+            {
+              Input: this.Input,
+              TextArea: this.TextArea,
+              Validation: this.Validation
+            },
+            L.get(L.inverse(wrappedIso), this.state.value),
+            this.onChange
+          )}
+        </React.Fragment>
       </form>
     )
   }
