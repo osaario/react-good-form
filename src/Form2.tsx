@@ -58,10 +58,11 @@ type LensPathType<
     : [A, U]
   : (A | [A])
 
-type FormEventType<T, A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]> = {
-  for: LensPathType<T, A, U, S, K>
-  value: any
-}
+type FormEventType<T, A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]> =
+  | { value: T[A][U][S][K]; for: [A, U, S, K] }
+  | { value: T[A][U][S]; for: [A, U, S] }
+  | { value: T[A][U]; for: [A, U] }
+  | { value: T[A]; for: [A] }
 
 export interface FormProps<T>
   extends _.Omit<React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>, 'onChange'> {
