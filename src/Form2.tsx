@@ -2,7 +2,7 @@ import * as React from 'react'
 import * as _ from 'lodash'
 import { formRules, ValidationRuleType, Validation } from './formrules'
 const L: any = require('partial.lenses')
-import { wrapValue, unWrapValue, wrappedValues, wrappedValuesLens, getIndexesFor } from './lenshelpers'
+import { wrappedIso, wrappedValuesLens, getIndexesFor, wrappedValues } from './lenshelpers'
 
 type ValidationRules = {
   [P in keyof typeof formRules]?: (typeof formRules)[P] extends ValidationRuleType<boolean>
@@ -143,7 +143,7 @@ export interface FormState<T> {
 export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
   state: FormState<T> = {
     // no pricings yet registered so lets just cast this
-    value: L.modify(L.leafs, wrapValue, this.props.value),
+    value: L.get(wrappedIso, this.props.value),
     iteration: 0
   }
   getValidationForField(lens: any) {
@@ -267,7 +267,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       // Do a JSON parse to check this
       this.setState((state: any) => {
         return {
-          value: L.modify(L.leafs, wrapValue, this.props.value),
+          value: L.get(wrappedIso, this.props.value),
           iteration: state.iteration + 1
         }
       })
@@ -295,7 +295,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
               return L.set([invalidFieldsLens, 'touched'], true, state)
             })
           } else {
-            this.props.onChange(L.modify(wrappedValues, unWrapValue, this.state.value))
+            this.props.onChange(L.get(L.inverse(wrappedIso), this.state.value))
           }
         }}
       >
@@ -306,7 +306,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
               TextArea: this.TextArea,
               Validation: this.Validation
             },
-            L.modify(wrappedValues, unWrapValue, this.state.value),
+            L.get(L.inverse(wrappedIso), this.state.value),
             this.onChange
           )}
         </React.Fragment>
