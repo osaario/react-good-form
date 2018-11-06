@@ -224,7 +224,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
         )
       }
       const value = newIndexes.reduce((acc: any, val: any) => {
-        console.log(val)
         return L.set([event.for, val[0], wrappedValuesLens], val[1], acc)
       }, this.state.value)
       this.setState({ value })
