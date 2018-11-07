@@ -127,7 +127,7 @@ export interface FormProps<T>
         props: ValidationProps<T, A, U, S, K>
       ) => JSX.Element
     },
-    emitChange: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    emitScopedChange: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
       event: FormEventType<T, A, U, S, K>
     ) => void
   ) => JSX.Element | null
@@ -243,7 +243,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
             for: props.for,
             value: props.type === 'number' ? parseInt(e.target.value, 10) : e.target.value
           }
-          this.emitChange(event as any)
+          this.emitScopedChange(event as any)
         }}
         _textArea={(props as any)._textArea}
         {..._.omit(props, omitFromInputs)}
@@ -261,7 +261,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
                 {
                   rules,
                   ref,
-                  uuid,
+                  uuid: key,
                   touched: false,
                   type: wrappedTypeName
                 },
@@ -291,7 +291,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
       />
     )
   }
-  emitChange = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+  emitScopedChange = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     event: FormEventType<T, A, U, S, K>
   ) => {
     // a hack to know if these are fed
@@ -382,7 +382,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
               TextArea: this.TextArea,
               Validation: this.Validation
             },
-            this.emitChange
+            this.emitScopedChange
           )}
         </React.Fragment>
       </form>
