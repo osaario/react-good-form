@@ -168,11 +168,11 @@ class Person extends React.Component {
     return (
       <Form
         value={this.state}
-        onChange={credentials => {
-          this.setState(credentials)
+        onChange={person => {
+          this.setState(person)
         }}
         onSubmit={() => {
-          alert("Login with credentials: " + JSON.stringify(this.state))
+          alert("Person: " + JSON.stringify(this.state))
         }}
       >
         {({ Input, Validation, NumberInput }) => (
