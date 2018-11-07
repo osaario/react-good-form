@@ -10,7 +10,7 @@ npm install react-good-form
 
 ## Simple Example
 
-*Good Form* supports basic validations such as *email*, *minLength*, *maxLength* etc. out of the box.
+**Good Form** supports basic validations such as `email`, `minLength`, `maxLength` etc. out of the box. It automatically emits `onChange` events and provides values for fields.
 
 ```JSX
 import React from "react"
@@ -129,50 +129,6 @@ You can create arbitary rules easily with *regular expressions* or just by writi
     </div>
   )}
 </Validation>
-```
-
-## Removes boilerplate
-
-*Good Form* automatically detects `value` props and emits `onChange` events. It also automatically converts values from `NumberInput` fields to numbers.
-
-```JSX
-import React from "react"
-import { Form } from "react-good-form"
-
-class Person extends React.Component {
-  state = {
-    name: "",
-    age: 18
-  }
-  render() {
-    return (
-      <Form
-        value={this.state}
-        onChange={person => {
-          this.setState(person)
-        }}
-        onSubmit={() => {
-          alert("Person: " + JSON.stringify(this.state))
-        }}
-      >
-        {({ Input, Validation, NumberInput }) => (
-          <div>
-            <div>
-              <label>Name</label>
-              <Input for="name" />
-            </div>
-            <div>
-              <label>Age</label>
-              <NumberInput for="age" />
-            </div>
-            <button>OK</button>
-          </div>
-        )}
-      </Form>
-    )
-  }
-}
-export default Person
 ```
 
 ## Supports nested structures 
