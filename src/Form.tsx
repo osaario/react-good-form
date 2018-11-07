@@ -1,5 +1,4 @@
 import * as React from 'react'
-import * as _ from 'lodash'
 import {
   ValidationRuleType,
   BrokenRule,
@@ -20,6 +19,42 @@ import { getIndexesFor, wrappedFields, wrappedTypeName } from './lenshelpers'
 
 const formRules = { notEmpty, minLength, maxLength, email, regExp, rule }
 const numberRules = { min, max, rule: numberRule }
+
+const omit = (obj: any, properties: string[]) => {
+  const lookup: any = properties.reduce((acc, key) => {
+    return {
+      ...acc,
+      [key]: true
+    }
+  }, {})
+  return Object.keys(obj).reduce((acc, key) => {
+    if (!lookup[key]) {
+      return {
+        ...acc,
+        [key]: obj[key]
+      }
+    }
+    return acc
+  }, {})
+}
+
+const pick = (obj: any, properties: string[]) => {
+  const lookup: any = properties.reduce((acc, key) => {
+    return {
+      ...acc,
+      [key]: true
+    }
+  }, {})
+  return Object.keys(obj).reduce((acc, key) => {
+    if (lookup[key]) {
+      return {
+        ...acc,
+        [key]: obj[key]
+      }
+    }
+    return acc
+  }, {})
+}
 
 type StringRules = {
   [P in keyof typeof formRules]?: (typeof formRules)[P] extends ValidationRuleType<boolean>
@@ -153,14 +188,11 @@ class InputInner extends React.Component<
 > {
   ref = React.createRef<any>()
   render() {
+    const { onDidMount, onWillUnmount, _textArea, ...restProps } = this.props
     if (this.props._textArea) {
-      return (
-        <textarea ref={this.ref as any} {..._.omit(this.props, ['onDidMount', 'onWillUnmount', '_textArea', 'for'])} />
-      )
+      return <textarea ref={this.ref as any} {...restProps} />
     } else {
-      return (
-        <input ref={this.ref as any} {..._.omit(this.props, ['onDidMount', 'onWillUnmount', '_textArea', 'for'])} />
-      )
+      return <input ref={this.ref as any} {...restProps} />
     }
   }
   componentDidMount() {
@@ -195,7 +227,7 @@ function getValidationFromRules(rules: any, value: any): BrokenRules {
 export interface FormState {
   fields: any
 }
-const omitFromInputs = ['ref'].concat(_.keys(formRules)).concat(_.keys(numberRules))
+const omitFromInputs = ['ref'].concat(Object.keys(formRules)).concat(Object.keys(numberRules))
 export class Form<T> extends React.Component<FormProps<T>, FormState> {
   state: FormState = {
     // no pricings yet registered so lets just cast this
@@ -239,9 +271,9 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
   Input = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     props: InputProps<T, A, U, S, K>
   ) => {
-    let rules = _.pick(props, _.keys(formRules)) as StringRules
+    let rules = pick(props, Object.keys(formRules)) as StringRules
     if (props.type === 'number') {
-      rules = _.pick(props, _.keys(numberRules)) as any
+      rules = pick(props, Object.keys(numberRules)) as any
     }
     const lensPath = props.for
     const value = L.get([lensPath], this.props.value)
@@ -263,7 +295,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
           this.emitScopedChange(event as any)
         }}
         _textArea={(props as any)._textArea}
-        {..._.omit(props, omitFromInputs)}
+        {...omit(props, omitFromInputs)}
         value={value == null ? props.value : value}
         key={JSON.stringify(rules) + JSON.stringify(props.for)}
         onDidMount={ref => {
@@ -272,7 +304,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
           }
           this.setState(state => {
             if (prevValidation) {
-              console.log({ prevValidation })
               return {
                 fields: L.assign(
                   lensPath,
@@ -284,7 +315,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
                 )
               }
             } else {
-              console.log({ prevValidation })
               return {
                 fields: L.set(
                   lensPath,
@@ -318,7 +348,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
     event: FormEventType<T, A, U, S, K>
   ) => {
     // a hack to know if these are fed
-    if (_.isObject(event.value) || _.isArray(event.value)) {
+    if (typeof event.value === 'object') {
       const newIndexes = getIndexesFor(event.value)
       /*
       const oldIndexes = getIndexesFor(L.get([event.for], this.state.fields))
@@ -345,10 +375,10 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
     }
   }
   render() {
-    const props = _.omit(this.props, ['value', 'onChange'])
+    const props = omit(this.props, ['value', 'onChange'])
     return (
       <form
-        {..._.omit(props, ['value', 'allowUndefinedPaths']) as any}
+        {...omit(props, ['value', 'allowUndefinedPaths']) as any}
         onSubmit={(e: any) => {
           e.preventDefault()
           e.stopPropagation()

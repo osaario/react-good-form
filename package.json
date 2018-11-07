@@ -123,9 +123,7 @@
     "react-dom": "^16.6.0"
   },
   "dependencies": {
-    "lodash": "^4.17.11",
-    "partial.lenses": "^13.2.0",
-    "uuid": "^3.3.2"
+    "partial.lenses": "^13.2.0"
   },
   "bugs": {
     "url": "https://github.com/osaario/react-good-form/issues"
