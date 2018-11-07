@@ -17,7 +17,6 @@ import {
 } from './formrules'
 const L: any = require('partial.lenses')
 import { getIndexesFor, wrappedFields, wrappedTypeName } from './lenshelpers'
-const uuid = require('uuid')
 
 const formRules = { notEmpty, minLength, maxLength, email, regExp, rule }
 const numberRules = { min, max, rule: numberRule }
@@ -246,11 +245,9 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
     }
     const lensPath = props.for
     const value = L.get([lensPath], this.props.value)
-    const key = L.get([lensPath, 'uuid'], this.state.fields) || uuid.v4()
+    const prevValidation = L.get([lensPath], this.state.fields)
     if (value === null && props.value == null)
       throw Error('Input needs to have value in Form state or provided one in props')
-    if (!_.isEmpty(rules) && (props.disabled || props.readOnly))
-      throw Error('Cant have rules on a non modifiable field')
     return (
       <InputInner
         onChange={(e: any) => {
@@ -268,34 +265,50 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
         _textArea={(props as any)._textArea}
         {..._.omit(props, omitFromInputs)}
         value={value == null ? props.value : value}
-        key={key}
+        key={JSON.stringify(rules) + JSON.stringify(props.for)}
         onDidMount={ref => {
           if (props.value === null) {
             throw Error('A value must be provided for mounting input: ' + lensPath.toString())
           }
           this.setState(state => {
-            return {
-              fields: L.set(
-                lensPath,
-                {
-                  rules,
-                  ref,
-                  uuid: key,
-                  touched: false,
-                  dirty: false,
-                  type: wrappedTypeName
-                },
-                state.fields
-              )
+            if (prevValidation) {
+              console.log({ prevValidation })
+              return {
+                fields: L.assign(
+                  lensPath,
+                  {
+                    rules,
+                    ref
+                  },
+                  state.fields
+                )
+              }
+            } else {
+              console.log({ prevValidation })
+              return {
+                fields: L.set(
+                  lensPath,
+                  {
+                    rules,
+                    ref,
+                    touched: false,
+                    dirty: false,
+                    type: wrappedTypeName
+                  },
+                  state.fields
+                )
+              }
             }
           })
         }}
         onWillUnmount={() => {
-          this.removeRule(lensPath as any)
+          this.setState(state => {
+            return { fields: L.remove([lensPath, 'rules'], state.fields) }
+          })
         }}
         onBlur={() => {
           this.setState(state => {
-            return { fields: L.set([lensPath, 'touched', L.optional], true, state.fields) }
+            return { fields: L.set([lensPath, 'touched'], true, state.fields) }
           })
         }}
       />
@@ -330,15 +343,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
       const value = L.set([event.for], event.value, this.props.value)
       this.props.onChange(value)
     }
-  }
-  removeRule = (lensPath: any) => {
-    /* TODO Check that the path exists or else throw Error */
-    if (!L.isDefined([lensPath, 'rules'])) {
-      throw Error('Lens path does not exits in removeRule: ' + lensPath.toString())
-    }
-    this.setState(state => {
-      return { fields: L.remove([lensPath, L.optional, 'rules', L.optional], state.fields) }
-    })
   }
   render() {
     const props = _.omit(this.props, ['value', 'onChange'])
