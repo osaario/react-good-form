@@ -80,8 +80,8 @@ You can create arbitary rules easily with *regular expressions* or just by writi
 
 ```JSX
 <Validation for="email">
-  {validation => (
-    <div style={{ color: validation ? "red" : undefined }}>
+  {({ invalid, touched }) => (
+    <div style={{ color: invalid && touched ? "red" : undefined }}>
       <label>Email</label>
       <Input
         rule={email => email.endsWith("hotmail.com")}
@@ -91,11 +91,11 @@ You can create arbitary rules easily with *regular expressions* or just by writi
           })
         }}
         email={true}
-        value={this.state.email}
         for="email"
       />
-      {validation &&
-        (validation.email ? (
+      {invalid &&
+        touched &&
+        (invalid.email ? (
           <div>
             <small>Invalid email</small>
           </div>
@@ -111,8 +111,8 @@ You can create arbitary rules easily with *regular expressions* or just by writi
 
 ```JSX
 <Validation for="password">
-  {validation => (
-    <div style={{ color: validation ? "red" : undefined }}>
+  {({ invalid, touched }) => (
+    <div style={{ color: invalid && touched ? "red" : undefined }}>
       <label>Password</label>
       <Input
         onChange={e => {
@@ -121,12 +121,12 @@ You can create arbitary rules easily with *regular expressions* or just by writi
           })
         }}
         type="password"
-        value={this.state.password}
         regExp={/(123456|password)/}
         for="password"
       />
-      {validation &&
-        validation.regExp && (
+      {invalid &&
+        touched &&
+        invalid.regExp && (
           <div>
             <small>Your password is too hard to remember</small>
           </div>
@@ -166,14 +166,14 @@ class Person extends React.Component {
               <Input for="name" />
             </div>
             <Validation for={["address", "street"]}>
-              {validation => (
-                <div style={{ color: validation && "red" }}>
+              {({ invalid, touched }) => (
+                <div style={{ color: invalid && touched && "red" }}>
                   <label>Street</label>
                   <Input for={["address", "street"]} minLength={5} maxLength={100} />
                 </div>
               )}
             </Validation>
-            <button>OK</button>
+            <button>Log in</button>
           </div>
         )}
       </Form>
