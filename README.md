@@ -25,6 +25,9 @@ class Login extends React.Component {
     return (
       <Form
         value={this.state}
+        onChange={person => {
+          this.setState(person)
+        }}
         onSubmit={() => {
           alert("Login with credentials: " + JSON.stringify(this.state))
         }}
