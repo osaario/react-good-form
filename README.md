@@ -36,27 +36,29 @@ class Login extends React.Component {
           <div>
             <h1>Log in</h1>
             <Validation for="email">
-              {validation => (
-                <div style={{ color: validation && "red" }}>
+              {({ touched, invalid }) => (
+                <div style={{ color: invalid && touched ? "red" : undefined }}>
                   <label>Email</label>
                   <Input email={true} for="email" />
-                  {validation && (
-                    <div>
-                      <small>Invalid email</small>
-                    </div>
-                  )}
+                  {invalid &&
+                    touched && (
+                      <div>
+                        <small>Invalid email</small>
+                      </div>
+                    )}
                 </div>
               )}
             </Validation>
             <Validation for="password">
-              {validation => (
-                <div style={{ color: validation && "red" }}>
+              {({ touched, invalid }) => (
+                <div style={{ color: invalid && touched ? "red" : undefined }}>
                   <label>Password</label>
                   <Input type="password" for="password" minLength={5} />
-                  {validation &&
-                    validation.minLength && (
+                  {touched &&
+                    invalid &&
+                    invalid.minLength && (
                       <div>
-                        <small>Password must be atleast {validation.minLength.ruleValue} characters.</small>
+                        <small>Password must be atleast {invalid.minLength} characters.</small>
                       </div>
                     )}
                 </div>
