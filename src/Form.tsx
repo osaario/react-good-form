@@ -53,8 +53,14 @@ export type ValidationProps<
 > = {
   for: LensPathType<T, A, U, S, K>
   children: (
-    validation: BrokenRules | null,
-    fieldInteractionState: { touched: boolean; active: boolean }
+    fieldInteractionState: {
+      touched: boolean
+      dirty: boolean
+      invalid: BrokenRules | false
+      valid: boolean
+      untouched: boolean
+      pristine: boolean
+    }
   ) => JSX.Element
 }
 export type TextAreaProps<
@@ -209,10 +215,17 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
   Validation = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     props: ValidationProps<T, A, U, S, K>
   ) => {
-    const validation = this.getValidationForField(props.for)
+    const invalid = this.getValidationForField(props.for)
     const touched = L.get([props.for, 'touched'], this.state.fields)
-    const active = L.get([props.for, 'active'], this.state.fields)
-    return props.children(validation, { touched, active })
+    const dirty = L.get([props.for, 'dirty'], this.state.fields)
+    return props.children({
+      touched,
+      dirty,
+      invalid: invalid || false,
+      valid: !invalid,
+      untouched: !touched,
+      pristine: !dirty
+    })
   }
   TextArea = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     props: TextAreaProps<T, A, U, S, K>
@@ -241,9 +254,9 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
     return (
       <InputInner
         onChange={(e: any) => {
-          if (!L.get([lensPath, 'active', L.optional], this.state.fields)) {
+          if (!L.get([lensPath, 'dirty', L.optional], this.state.fields)) {
             this.setState(state => {
-              return { fields: L.set([lensPath, 'active', L.optional], true, state.fields) }
+              return { fields: L.set([lensPath, 'dirty', L.optional], true, state.fields) }
             })
           }
           const event = {
@@ -269,7 +282,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
                   ref,
                   uuid: key,
                   touched: false,
-                  active: false,
+                  dirty: false,
                   type: wrappedTypeName
                 },
                 state.fields
@@ -281,11 +294,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
           this.removeRule(lensPath as any)
         }}
         onBlur={() => {
-          this.setState(state => {
-            return { fields: L.set([lensPath, 'active', L.optional], false, state.fields) }
-          })
-        }}
-        onFocus={() => {
           this.setState(state => {
             return { fields: L.set([lensPath, 'touched', L.optional], true, state.fields) }
           })
