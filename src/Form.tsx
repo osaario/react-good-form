@@ -54,7 +54,7 @@ export type ValidationProps<
   for: LensPathType<T, A, U, S, K>
   children: (
     validation: BrokenRules | null,
-    fieldInteractionState: { touched: boolean; focused: boolean }
+    fieldInteractionState: { touched: boolean; active: boolean }
   ) => JSX.Element
 }
 export type TextAreaProps<
@@ -211,8 +211,8 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
   ) => {
     const validation = this.getValidationForField(props.for)
     const touched = L.get([props.for, 'touched'], this.state.fields)
-    const focused = L.get([props.for, 'focused'], this.state.fields)
-    return props.children(validation, { touched, focused })
+    const active = L.get([props.for, 'active'], this.state.fields)
+    return props.children(validation, { touched, active })
   }
   TextArea = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     props: TextAreaProps<T, A, U, S, K>
@@ -231,9 +231,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
     if (props.type === 'number') {
       rules = _.pick(props, _.keys(numberRules)) as any
     }
-    console.log('input', { for: props.for })
     const lensPath = props.for
-    console.log({ lensPath })
     const value = L.get([lensPath], this.props.value)
     const key = L.get([lensPath, 'uuid'], this.state.fields) || uuid.v4()
     if (value === null && props.value == null)
@@ -243,9 +241,9 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
     return (
       <InputInner
         onChange={(e: any) => {
-          if (!L.get([lensPath, 'focused', L.optional], this.state.fields)) {
+          if (!L.get([lensPath, 'active', L.optional], this.state.fields)) {
             this.setState(state => {
-              return { fields: L.set([lensPath, 'focused', L.optional], true, state.fields) }
+              return { fields: L.set([lensPath, 'active', L.optional], true, state.fields) }
             })
           }
           const event = {
@@ -259,7 +257,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
         value={value == null ? props.value : value}
         key={key}
         onDidMount={ref => {
-          console.log('didmount', key)
           if (props.value === null) {
             throw Error('A value must be provided for mounting input: ' + lensPath.toString())
           }
@@ -272,7 +269,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
                   ref,
                   uuid: key,
                   touched: false,
-                  focused: false,
+                  active: false,
                   type: wrappedTypeName
                 },
                 state.fields
@@ -281,15 +278,14 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
           })
         }}
         onWillUnmount={() => {
-          console.log('willunmount', uuid)
           this.removeRule(lensPath as any)
         }}
         onBlur={() => {
           this.setState(state => {
-            return { fields: L.set([lensPath, 'focused', L.optional], false, state.fields) }
+            return { fields: L.set([lensPath, 'active', L.optional], false, state.fields) }
           })
         }}
-        onFocus={e => {
+        onFocus={() => {
           this.setState(state => {
             return { fields: L.set([lensPath, 'touched', L.optional], true, state.fields) }
           })
@@ -316,7 +312,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
       const value = newIndexes.reduce((acc: any, val: any) => {
         // remove undefined indices
         if (val[1] === undefined) {
-          console.log('remove', val[0])
           return L.remove([event.for, val[0]], acc)
         } else {
           return L.set([event.for, val[0]], val[1], acc)

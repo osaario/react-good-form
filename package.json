@@ -1,6 +1,6 @@
 {
   "name": "react-good-form",
-  "version": "0.0.9-development",
+  "version": "0.0.10-development",
   "description": "Good Form that supports nesting and provides validation",
   "keywords": [],
   "main": "dist/react-good-form.umd.js",
