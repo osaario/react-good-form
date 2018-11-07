@@ -37,6 +37,7 @@ class Login extends React.Component {
                 <div style={{ color: validation ? "red" : undefined }}>
                   <label>Email</label>
                   <Input
+                    value={this.state.email}
                     onChange={e => {
                       this.setState({
                         email: e.target.value
@@ -69,6 +70,7 @@ class Login extends React.Component {
                       })
                     }}
                     type="password"
+                    value={this.state.password}
                     for="password"
                     minLength={5}
                   />
@@ -108,6 +110,7 @@ You can create arbitary rules easily with *regular expressions* or just by writi
           })
         }}
         email={true}
+        value={this.state.email}
         for="email"
       />
       {validation &&
@@ -137,6 +140,7 @@ You can create arbitary rules easily with *regular expressions* or just by writi
           })
         }}
         type="password"
+        value={this.state.password}
         regExp={/(123456|password)/}
         for="password"
       />
