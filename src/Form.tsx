@@ -2,7 +2,7 @@ import * as React from 'react'
 import * as _ from 'lodash'
 import {
   ValidationRuleType,
-  Validation,
+  BrokenRule,
   notEmpty,
   minLength,
   min,
@@ -42,7 +42,7 @@ type NumberInputRules = {
         : (typeof numberRules)[P] extends ValidationRuleType<RegExp> ? RegExp : NumberFunctionRule
 }
 
-export type ValidationGroup = { [K in keyof typeof formRules]?: Validation }
+export type BrokenRules = { [K in keyof typeof formRules]?: BrokenRule }
 
 export type ValidationProps<
   T,
@@ -52,7 +52,10 @@ export type ValidationProps<
   K extends keyof T[A][U][S]
 > = {
   for: LensPathType<T, A, U, S, K>
-  children: (validation: ValidationGroup | null) => JSX.Element
+  children: (
+    validation: BrokenRules | null,
+    fieldInteractionState: { touched: boolean; focused: boolean }
+  ) => JSX.Element
 }
 export type TextAreaProps<
   T,
@@ -164,7 +167,7 @@ class InputInner extends React.Component<
   }
 }
 
-function getValidationFromRules(rules: any, value: any): ValidationGroup {
+function getValidationFromRules(rules: any, value: any): BrokenRules {
   // _.keys is untyped!!
   const { ref, ...withoutRef } = rules
   const validationsForField = Object.keys(withoutRef)
@@ -181,7 +184,7 @@ function getValidationFromRules(rules: any, value: any): ValidationGroup {
       }
     }, {})
 
-  return validationsForField as ValidationGroup
+  return validationsForField as BrokenRules
 }
 
 export interface FormState {
@@ -196,8 +199,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
   getValidationForField(lens: any) {
     // field not touched
     const rules = L.get([lens, 'rules'], this.state.fields)
-    const touched = L.get([lens, 'touched'], this.state.fields)
-    if (touched && rules) {
+    if (rules) {
       const ref = L.get([lens, 'ref'], this.state.fields)
       const invalid = getValidationFromRules(rules, ref.current.value)
       return Object.keys(invalid).length === 0 ? null : invalid
@@ -208,7 +210,9 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
     props: ValidationProps<T, A, U, S, K>
   ) => {
     const validation = this.getValidationForField(props.for)
-    return props.children(validation)
+    const touched = L.get([props.for, 'touched'], this.state.fields)
+    const focused = L.get([props.for, 'focused'], this.state.fields)
+    return props.children(validation, { touched, focused })
   }
   TextArea = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     props: TextAreaProps<T, A, U, S, K>
@@ -239,6 +243,11 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
     return (
       <InputInner
         onChange={(e: any) => {
+          if (!L.get([lensPath, 'focused', L.optional], this.state.fields)) {
+            this.setState(state => {
+              return { fields: L.set([lensPath, 'focused', L.optional], true, state.fields) }
+            })
+          }
           const event = {
             for: props.for,
             value: props.type === 'number' ? parseInt(e.target.value, 10) : e.target.value
@@ -263,6 +272,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
                   ref,
                   uuid: key,
                   touched: false,
+                  focused: false,
                   type: wrappedTypeName
                 },
                 state.fields
@@ -275,18 +285,14 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
           this.removeRule(lensPath as any)
         }}
         onBlur={() => {
-          // touch non number fields on blur
-          this.touchField(lensPath as any)
+          this.setState(state => {
+            return { fields: L.set([lensPath, 'focused', L.optional], false, state.fields) }
+          })
         }}
-        onFocus={() => {
-          /*
-          if (props.type === "number") {
-            this.props.touchField(lensPath)
-          } else {
-            // untouch all but number fields on focus
-            this.props.unTouchField(lensPath)
-            })
-        } */
+        onFocus={e => {
+          this.setState(state => {
+            return { fields: L.set([lensPath, 'touched', L.optional], true, state.fields) }
+          })
         }}
       />
     )
@@ -321,24 +327,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
       const value = L.set([event.for], event.value, this.props.value)
       this.props.onChange(value)
     }
-  }
-  touchField = (lensPath: any) => {
-    /* TODO Check that the path exists or else throw Error */
-    if (!L.isDefined([lensPath, 'touched'])) {
-      throw Error('Lens path does not exits in touchField: ' + lensPath.toString())
-    }
-    this.setState(state => {
-      return { fields: L.set([lensPath, 'touched', L.optional], true, state.fields) }
-    })
-  }
-  unTouchField = (lensPath: any) => {
-    /* TODO Check that the path exists or else throw Error */
-    if (!L.isDefined([lensPath, 'touched'])) {
-      throw Error('Lens path does not exits in unTouchField: ' + lensPath.toString())
-    }
-    this.setState(state => {
-      return { fields: L.set([lensPath, L.optional, 'touched', L.optional], false, state.fields) }
-    })
   }
   removeRule = (lensPath: any) => {
     /* TODO Check that the path exists or else throw Error */

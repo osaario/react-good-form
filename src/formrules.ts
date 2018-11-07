@@ -2,7 +2,7 @@ export type StringFunctionRule = (value: string) => boolean
 export type NumberFunctionRule = (value: number) => boolean
 export type ValidationRuleType<
   T extends string | number | boolean | RegExp | StringFunctionRule | NumberFunctionRule
-> = (value: any, ruleValue: T) => Validation | null
+> = (value: any, ruleValue: T) => BrokenRule | null
 // https://emailregex.com/
 const emailRegex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
 //
@@ -10,64 +10,61 @@ export const notEmpty: ValidationRuleType<boolean> = (value, ruleValue) => {
   if (!ruleValue) return null
   const pass = !(value == null || value === '')
   if (pass) return null
-  else return { validation: 'error', ruleValue }
+  else return ruleValue
 }
 
 export const email: ValidationRuleType<boolean> = (value, ruleValue) => {
   if (!ruleValue) return null
   const pass = value && emailRegex.test(value)
   if (pass) return null
-  else return { validation: 'error', ruleValue }
+  else return ruleValue
 }
 
 export const minLength: ValidationRuleType<number> = (value, ruleValue) => {
   if (!ruleValue) return null
   const pass = value && value.length >= ruleValue
   if (pass) return null
-  else return { validation: 'error', ruleValue }
+  else return ruleValue
 }
 
 export const maxLength: ValidationRuleType<number> = (value, ruleValue) => {
   if (!ruleValue) return null
   const pass = value && value.length <= ruleValue
   if (pass) return null
-  else return { validation: 'error', ruleValue }
+  else return ruleValue
 }
 
 export const min: ValidationRuleType<number> = (value, ruleValue) => {
   const pass = value >= ruleValue
   if (pass) return null
-  else return { validation: 'error', ruleValue }
+  else return ruleValue
 }
 
 export const max: ValidationRuleType<number> = (value, ruleValue) => {
   const pass = value <= ruleValue
   if (pass) return null
-  else return { validation: 'error', ruleValue }
+  else return ruleValue
 }
 
 export const regExp: ValidationRuleType<RegExp> = (value, ruleValue) => {
   const pass = value && ruleValue.test(value)
   if (pass) return null
-  else return { validation: 'error', ruleValue }
+  else return ruleValue
 }
 
 export const rule: ValidationRuleType<StringFunctionRule> = (value, ruleValue) => {
   const pass = ruleValue(value)
   if (pass) return null
-  else return { validation: 'error', ruleValue: ruleValue }
+  else return ruleValue
 }
 
 export const numberRule: ValidationRuleType<NumberFunctionRule> = (value, ruleValue) => {
   const pass = ruleValue(value)
   if (pass) return null
-  else return { validation: 'error', ruleValue: ruleValue }
+  else return ruleValue
 }
 
-export interface Validation {
-  validation: 'error'
-  ruleValue: string | number | boolean | RegExp | StringFunctionRule | NumberFunctionRule
-}
+export type BrokenRule = string | number | boolean | RegExp | StringFunctionRule | NumberFunctionRule
 
 /*
 5
