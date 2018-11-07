@@ -185,7 +185,7 @@ class Person extends React.Component {
               <label>Age</label>
               <NumberInput for="age" />
             </div>
-            <button>Log in</button>
+            <button>OK</button>
           </div>
         )}
       </Form>
@@ -195,6 +195,49 @@ class Person extends React.Component {
 export default Person
 ```
 
+## Supports nested structures 
+
+```JSX
+class Person extends React.Component {
+  state = {
+    name: "",
+    address: {
+      street: ""
+    }
+  }
+  render() {
+    return (
+      <Form
+        value={this.state}
+        onChange={person => {
+          this.setState(person)
+        }}
+        onSubmit={() => {
+          alert("Person: " + JSON.stringify(this.state))
+        }}
+      >
+        {({ Input, Validation, NumberInput }) => (
+          <div>
+            <div>
+              <label>Name</label>
+              <Input for="name" />
+            </div>
+            <Validation for={["address", "street"]}>
+              {validation => (
+                <div style={{ color: validation && "red" }}>
+                  <label>Street</label>
+                  <Input for={["address", "street"]} minLength={5} maxLength={100} />
+                </div>
+              )}
+            </Validation>
+            <button>OK</button>
+          </div>
+        )}
+      </Form>
+    )
+  }
+}
+```
 
 ## Known issues:
 
