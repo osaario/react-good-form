@@ -155,6 +155,50 @@ You can create arbitary rules easily with *regular expressions* or just by writi
 </Validation>
 ```
 
+## Removes boilerplate
+
+Good form automatically detects `value` props and emits `onChange` events. It also automatically converts values from `NumberInput` fields to numbers.
+
+```JSX
+import React from "react"
+import { Form } from "react-good-form"
+
+class Person extends React.Component {
+  state = {
+    name: "",
+    age: 18
+  }
+  render() {
+    return (
+      <Form
+        value={this.state}
+        onChange={credentials => {
+          this.setState(credentials)
+        }}
+        onSubmit={() => {
+          alert("Login with credentials: " + JSON.stringify(this.state))
+        }}
+      >
+        {({ Input, Validation, NumberInput }) => (
+          <div>
+            <div>
+              <label>Name</label>
+              <Input for="name" />
+            </div>
+            <div>
+              <label>Age</label>
+              <NumberInput for="age" />
+            </div>
+            <button>Log in</button>
+          </div>
+        )}
+      </Form>
+    )
+  }
+}
+export default Person
+```
+
 
 ## Known issues:
 
