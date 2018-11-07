@@ -34,7 +34,7 @@ class Login extends React.Component {
             <h1>Log in</h1>
             <Validation for="email">
               {validation => (
-                <div style={{ color: validation ? "red" : undefined }}>
+                <div style={{ color: validation && "red" }}>
                   <label>Email</label>
                   <Input
                     value={this.state.email}
@@ -46,18 +46,17 @@ class Login extends React.Component {
                     email={true}
                     for="email"
                   />
-                  {validation &&
-                    validation.email &&
-                      <div>
-                        <small>Invalid email</small>
-                      </div>
-                   }
+                  {validation && (
+                    <div>
+                      <small>Invalid email</small>
+                    </div>
+                  )}
                 </div>
               )}
             </Validation>
             <Validation for="password">
               {validation => (
-                <div style={{ color: validation ? "red" : undefined }}>
+                <div style={{ color: validation && "red" }}>
                   <label>Password</label>
                   <Input
                     onChange={e => {
@@ -71,9 +70,9 @@ class Login extends React.Component {
                     minLength={5}
                   />
                   {validation &&
-                    validation.regExp && (
+                    validation.minLength && (
                       <div>
-                        <small>Your password is too hard to remember</small>
+                        <small>Password must be atleast {validation.minLength.ruleValue} characters.</small>
                       </div>
                     )}
                 </div>
