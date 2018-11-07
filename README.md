@@ -36,16 +36,7 @@ class Login extends React.Component {
               {validation => (
                 <div style={{ color: validation && "red" }}>
                   <label>Email</label>
-                  <Input
-                    value={this.state.email}
-                    onChange={e => {
-                      this.setState({
-                        email: e.target.value
-                      })
-                    }}
-                    email={true}
-                    for="email"
-                  />
+                  <Input email={true} for="email" />
                   {validation && (
                     <div>
                       <small>Invalid email</small>
@@ -58,17 +49,7 @@ class Login extends React.Component {
               {validation => (
                 <div style={{ color: validation && "red" }}>
                   <label>Password</label>
-                  <Input
-                    onChange={e => {
-                      this.setState({
-                        password: e.target.value
-                      })
-                    }}
-                    type="password"
-                    value={this.state.password}
-                    for="password"
-                    minLength={5}
-                  />
+                  <Input type="password" for="password" minLength={5} />
                   {validation &&
                     validation.minLength && (
                       <div>
