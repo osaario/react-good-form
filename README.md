@@ -1,6 +1,6 @@
 # React Good Form
 
-React form with validation. Supports nested objects and static arrays.
+React form with validation. Supports nested structures with objects and arrays.
 
 ## Installation
 
@@ -10,7 +10,7 @@ npm install react-good-form
 
 ## Simple Example
 
-Good Form supports basic validations such as *email*, *minLength*, *maxLength* etc. out of the box.
+*Good Form* supports basic validations such as *email*, *minLength*, *maxLength* etc. out of the box.
 
 ```JSX
 import React from "react"
@@ -152,7 +152,7 @@ You can create arbitary rules easily with *regular expressions* or just by writi
 
 ## Removes boilerplate
 
-Good form automatically detects `value` props and emits `onChange` events. It also automatically converts values from `NumberInput` fields to numbers.
+*Good Form* automatically detects `value` props and emits `onChange` events. It also automatically converts values from `NumberInput` fields to numbers.
 
 ```JSX
 import React from "react"
