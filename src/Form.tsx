@@ -16,7 +16,8 @@ import {
   NumberFunctionRule
 } from './formrules'
 const L: any = require('partial.lenses')
-import { wrappedIso, wrappedValuesLens, getIndexesFor, wrappedValues } from './lenshelpers'
+import { getIndexesFor, wrappedValues, wrappedTypeName } from './lenshelpers'
+const uuid = require('uuid')
 
 const formRules = { notEmpty, minLength, maxLength, email, regExp, rule }
 const numberRules = { min, max, rule: numberRule }
@@ -41,7 +42,6 @@ type NumberInputRules = {
         : (typeof numberRules)[P] extends ValidationRuleType<RegExp> ? RegExp : NumberFunctionRule
 }
 
-type ValidationRules = NumberInputRules | StringRules
 export type ValidationGroup = { [K in keyof typeof formRules]?: Validation }
 
 export type ValidationProps<
@@ -101,16 +101,17 @@ type LensPathType<
   : (A | [A])
 
 type FormEventType<T, A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]> =
-  | { value: T[A][U][S][K]; for: [A, U, S, K] }
-  | { value: T[A][U][S]; for: [A, U, S] }
-  | { value: T[A][U]; for: [A, U] }
-  | { value: T[A]; for: [A] }
+  | { value: Partial<T[A][U][S][K]>; for: [A, U, S, K] }
+  | { value: Partial<T[A][U][S]>; for: [A, U, S] }
+  | { value: Partial<T[A][U]>; for: [A, U] }
+  | { value: Partial<T[A]>; for: [A] }
+  | { value: Partial<T>; for: [] }
 
 export interface FormProps<T>
   extends _.Omit<React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>, 'onChange'> {
   value: T
-  onChange: (data: T) => void
   optimized?: boolean
+  onChange: (data: T) => void
   children: (
     Form: {
       Input: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
@@ -126,7 +127,6 @@ export interface FormProps<T>
         props: ValidationProps<T, A, U, S, K>
       ) => JSX.Element
     },
-    value: T,
     onChange: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
       event: FormEventType<T, A, U, S, K>
     ) => void
@@ -192,7 +192,7 @@ const omitFromInputs = ['ref'].concat(_.keys(formRules)).concat(_.keys(numberRul
 export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
   state: FormState<T> = {
     // no pricings yet registered so lets just cast this
-    value: L.get(wrappedIso, this.props.value),
+    value: this.props.value,
     iteration: 0
   }
   getValidationForField(lens: any) {
@@ -200,8 +200,8 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     const rules = L.get([lens, 'rules'], this.state.value)
     const touched = L.get([lens, 'touched'], this.state.value)
     if (touched && rules) {
-      const value = L.get([lens, 'value'], this.state.value)
-      const invalid = getValidationFromRules(rules, value)
+      const ref = L.get([lens, 'ref'], this.state.value)
+      const invalid = getValidationFromRules(rules, ref.current.value)
       return Object.keys(invalid).length === 0 ? null : invalid
     }
     return null
@@ -229,9 +229,12 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     if (props.type === 'number') {
       rules = _.pick(props, _.keys(numberRules)) as any
     }
+    console.log('input', { for: props.for })
     const lensPath = props.for
-    const value = L.get([lensPath, 'value', L.optional], this.state.value)
-    if (!value == null && props.value == null)
+    console.log({ lensPath })
+    const value = L.get([lensPath], this.props.value)
+    const key = L.get([lensPath, 'uuid'], this.state.value) || uuid.v4()
+    if (value === null && props.value == null)
       throw Error('Input needs to have value in Form state or provided one in props')
     if (!_.isEmpty(rules) && (props.disabled || props.readOnly))
       throw Error('Cant have rules on a non modifiable field')
@@ -244,14 +247,33 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
           }
           this.onChange(event as any)
         }}
-        value={value}
         _textArea={(props as any)._textArea}
         {..._.omit(props, omitFromInputs)}
-        key={this.state.iteration + JSON.stringify(lensPath) + JSON.stringify(rules)}
+        value={value == null ? props.value : value}
+        key={key}
         onDidMount={ref => {
-          this.insertRule(lensPath as any, rules, ref)
+          console.log('didmount', key)
+          if (props.value === null) {
+            throw Error('A value must be provided for mounting input: ' + lensPath.toString())
+          }
+          this.setState(state => {
+            return {
+              value: L.set(
+                lensPath,
+                {
+                  rules,
+                  ref,
+                  uuid,
+                  touched: false,
+                  type: wrappedTypeName
+                },
+                state.value
+              )
+            }
+          })
         }}
         onWillUnmount={() => {
+          console.log('willunmount', uuid)
           this.removeRule(lensPath as any)
         }}
         onBlur={() => {
@@ -276,68 +298,57 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
   ) => {
     // a hack to know if these are fed
     if (_.isObject(event.value) || _.isArray(event.value)) {
-      const oldIndexes = getIndexesFor(L.get([event.for, L.inverse(wrappedIso)], this.state.value))
+      const oldIndexes = getIndexesFor(L.get([event.for], this.state.value))
       const newIndexes = getIndexesFor(event.value)
+      const oneDeepOld = oldIndexes.map((v: any) => v[0]).filter((a: any) => a.length === 1)
+      const oneDeepNew = newIndexes.map((v: any) => v[0]).filter((a: any) => a.length === 1)
+      console.log({ oldIndexes, newIndexes, oneDeepOld, oneDeepNew })
       if (JSON.stringify(oldIndexes.map((v: any) => v[0])) !== JSON.stringify(newIndexes.map((v: any) => v[0]))) {
         console.error(
           'Detected a change to datastructure, removing elements or changing array order leads to undefined behaviour'
         )
       }
       const value = newIndexes.reduce((acc: any, val: any) => {
-        return L.set([event.for, val[0], wrappedValuesLens], val[1], acc)
-      }, this.state.value)
-      this.setState({ value })
+        // remove undefined indices
+        if (val[1] === undefined) {
+          console.log('remove', val[0])
+          return L.remove([event.for, val[0]], acc)
+        } else {
+          return L.set([event.for, val[0]], val[1], acc)
+        }
+      }, this.props.value)
+      this.props.onChange(value)
     } else {
-      const value = L.set([event.for, wrappedValuesLens], event.value, this.state.value)
-      this.setState({ value })
+      const value = L.set([event.for], event.value, this.props.value)
+      this.props.onChange(value)
     }
   }
   touchField = (lensPath: any) => {
     /* TODO Check that the path exists or else throw Error */
-    if (!L.isDefined(lensPath)) {
+    if (!L.isDefined([lensPath, 'touched'])) {
       throw Error('Lens path does not exits in touchField: ' + lensPath.toString())
     }
     this.setState(state => {
-      return { value: L.set([lensPath, 'touched'], true, state.value) }
+      return { value: L.set([lensPath, 'touched', L.optional], true, state.value) }
     })
   }
   unTouchField = (lensPath: any) => {
     /* TODO Check that the path exists or else throw Error */
-    if (!L.isDefined(lensPath)) {
+    if (!L.isDefined([lensPath, 'touched'])) {
       throw Error('Lens path does not exits in unTouchField: ' + lensPath.toString())
     }
     this.setState(state => {
-      return { value: L.set([lensPath, 'touched'], false, state.value) }
+      return { value: L.set([lensPath, L.optional, 'touched', L.optional], false, state.value) }
     })
   }
   removeRule = (lensPath: any) => {
     /* TODO Check that the path exists or else throw Error */
-    if (!L.isDefined(lensPath)) {
+    if (!L.isDefined([lensPath, 'rules'])) {
       throw Error('Lens path does not exits in removeRule: ' + lensPath.toString())
     }
     this.setState(state => {
-      return { value: L.remove([lensPath, 'rules', L.optional], state.value) }
+      return { value: L.remove([lensPath, L.optional, 'rules', L.optional], state.value) }
     })
-  }
-  insertRule = (lensPath: any, rule: ValidationRules, ref: React.RefObject<HTMLInputElement>) => {
-    /* TODO Check that the path exists or else throw Error */
-    if (!L.isDefined(lensPath)) {
-      throw Error('Lens path does not exits in insertRule: ' + lensPath.toString())
-    }
-    this.setState(state => {
-      return { value: L.set([lensPath, 'ref'], ref, L.set([lensPath, 'rules'], rule, state.value)) }
-    })
-  }
-  componentDidUpdate(prevProps: any) {
-    if (prevProps.value !== this.props.value && JSON.stringify(prevProps.value) !== JSON.stringify(this.props.value)) {
-      // Do a JSON parse to check this
-      this.setState((state: any) => {
-        return {
-          value: L.get(wrappedIso, this.props.value),
-          iteration: state.iteration + 1
-        }
-      })
-    }
   }
   render() {
     const props = _.omit(this.props, ['value', 'onChange'])
@@ -350,7 +361,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
           const invalidFieldsLens = L.compose(
             wrappedValues,
             L.when((wv: any) => {
-              const validation = getValidationFromRules(wv.rules, wv.value)
+              const validation = getValidationFromRules(wv.rules, wv.ref.current.value)
               return wv.rules && Object.keys(validation).length > 0
             })
           )
@@ -361,7 +372,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
               return L.set([invalidFieldsLens, 'touched'], true, state)
             })
           } else {
-            this.props.onChange(L.get(L.inverse(wrappedIso), this.state.value))
+            if (this.props.onSubmit) this.props.onSubmit(e)
           }
         }}
       >
@@ -373,7 +384,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
               TextArea: this.TextArea,
               Validation: this.Validation
             },
-            L.get(L.inverse(wrappedIso), this.state.value),
             this.onChange
           )}
         </React.Fragment>

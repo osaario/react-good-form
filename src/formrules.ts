@@ -15,54 +15,39 @@ export const notEmpty: ValidationRuleType<boolean> = (value, ruleValue) => {
 
 export const email: ValidationRuleType<boolean> = (value, ruleValue) => {
   if (!ruleValue) return null
-  const pass = emailRegex.test(value)
+  const pass = value && emailRegex.test(value)
   if (pass) return null
   else return { validation: 'error', ruleValue }
 }
 
 export const minLength: ValidationRuleType<number> = (value, ruleValue) => {
-  if (!!value && typeof value !== 'string') {
-    throw Error("Can't have minLength rule on a non string field")
-  }
   if (!ruleValue) return null
-  const pass = value.length >= ruleValue
+  const pass = value && value.length >= ruleValue
   if (pass) return null
   else return { validation: 'error', ruleValue }
 }
 
 export const maxLength: ValidationRuleType<number> = (value, ruleValue) => {
-  if (value && typeof value !== 'string') {
-    throw Error("Can't have maxLength rule on a non string field")
-  }
   if (!ruleValue) return null
-  const pass = value.length <= ruleValue
+  const pass = value && value.length <= ruleValue
   if (pass) return null
   else return { validation: 'error', ruleValue }
 }
 
 export const min: ValidationRuleType<number> = (value, ruleValue) => {
-  if (value && typeof value !== 'number') {
-    throw Error("Can't have min rule on a non number field")
-  }
   const pass = value >= ruleValue
   if (pass) return null
   else return { validation: 'error', ruleValue }
 }
 
 export const max: ValidationRuleType<number> = (value, ruleValue) => {
-  if (value && typeof value !== 'number') {
-    throw Error("Can't have min rule on a non number field")
-  }
   const pass = value <= ruleValue
   if (pass) return null
   else return { validation: 'error', ruleValue }
 }
 
 export const regExp: ValidationRuleType<RegExp> = (value, ruleValue) => {
-  if (value && typeof value !== 'string') {
-    throw Error("Can't have regex rule on a non string field")
-  }
-  const pass = ruleValue.test(value)
+  const pass = value && ruleValue.test(value)
   if (pass) return null
   else return { validation: 'error', ruleValue }
 }

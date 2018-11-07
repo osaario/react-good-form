@@ -1,13 +1,15 @@
 const L: any = require('partial.lenses')
 import * as _ from 'lodash'
+const uuid = require('uuid')
 
-const wrappedTypeName = 'oTMiaY58D7'
+export const wrappedTypeName = 'oTMiaY58D7'
 
 export function wrapValue(value: number | string | boolean) {
   return {
     rules: [],
     touched: false,
     ref: null,
+    uuid: uuid.v4(),
     type: wrappedTypeName,
     value
   }
@@ -15,9 +17,6 @@ export function wrapValue(value: number | string | boolean) {
 
 export function isWrappedValue(o: any) {
   return o && o.type && o.type === wrappedTypeName
-}
-export function unWrapValue(wrapped: any) {
-  return wrapped.value
 }
 
 export const wrappedValuesOrPrimitives = L.lazy((rec: any) => {
@@ -45,11 +44,3 @@ export function getIndexesFor(val: any) {
     val
   )
 }
-
-export const wrappedValuesLens = L.ifElse(
-  isWrappedValue,
-  ['value'],
-  [L.define({ rules: [], touched: false, ref: null, type: wrappedTypeName }), 'value']
-)
-
-export const wrappedIso = L.iso(L.modify(L.leafs, wrapValue), L.modify(wrappedValues, unWrapValue))
