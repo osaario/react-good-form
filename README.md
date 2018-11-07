@@ -131,7 +131,9 @@ You can create arbitary rules easily with *regular expressions* or just by writi
 </Validation>
 ```
 
-## Supports nested structures 
+## Supports nested structures
+
+Provide paths to nested structures as arrays.
 
 ```JSX
 class Person extends React.Component {
