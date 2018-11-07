@@ -296,8 +296,9 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
   ) => {
     // a hack to know if these are fed
     if (_.isObject(event.value) || _.isArray(event.value)) {
-      const oldIndexes = getIndexesFor(L.get([event.for], this.state.fields))
       const newIndexes = getIndexesFor(event.value)
+      /*
+      const oldIndexes = getIndexesFor(L.get([event.for], this.state.fields))
       const oneDeepOld = oldIndexes.map((v: any) => v[0]).filter((a: any) => a.length === 1)
       const oneDeepNew = newIndexes.map((v: any) => v[0]).filter((a: any) => a.length === 1)
       console.log({ oldIndexes, newIndexes, oneDeepOld, oneDeepNew })
@@ -305,7 +306,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
         console.error(
           'Detected a change to datastructure, removing elements or changing array order leads to undefined behaviour'
         )
-      }
+      }*/
       const value = newIndexes.reduce((acc: any, val: any) => {
         // remove undefined indices
         if (val[1] === undefined) {
