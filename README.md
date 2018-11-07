@@ -47,15 +47,11 @@ class Login extends React.Component {
                     for="email"
                   />
                   {validation &&
-                    (validation.email ? (
+                    validation.email &&
                       <div>
                         <small>Invalid email</small>
                       </div>
-                    ) : (
-                      <div>
-                        <small>Needs to be hotmail address for some reason</small>
-                      </div>
-                    ))}
+                   }
                 </div>
               )}
             </Validation>
