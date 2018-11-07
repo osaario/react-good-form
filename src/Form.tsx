@@ -16,7 +16,7 @@ import {
   NumberFunctionRule
 } from './formrules'
 const L: any = require('partial.lenses')
-import { getIndexesFor, wrappedValues, wrappedTypeName } from './lenshelpers'
+import { getIndexesFor, wrappedFields, wrappedTypeName } from './lenshelpers'
 const uuid = require('uuid')
 
 const formRules = { notEmpty, minLength, maxLength, email, regExp, rule }
@@ -184,23 +184,21 @@ function getValidationFromRules(rules: any, value: any): ValidationGroup {
   return validationsForField as ValidationGroup
 }
 
-export interface FormState<T> {
-  value: T
-  iteration: 0
+export interface FormState {
+  fields: any
 }
 const omitFromInputs = ['ref'].concat(_.keys(formRules)).concat(_.keys(numberRules))
-export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
-  state: FormState<T> = {
+export class Form<T> extends React.Component<FormProps<T>, FormState> {
+  state: FormState = {
     // no pricings yet registered so lets just cast this
-    value: this.props.value,
-    iteration: 0
+    fields: {}
   }
   getValidationForField(lens: any) {
     // field not touched
-    const rules = L.get([lens, 'rules'], this.state.value)
-    const touched = L.get([lens, 'touched'], this.state.value)
+    const rules = L.get([lens, 'rules'], this.state.fields)
+    const touched = L.get([lens, 'touched'], this.state.fields)
     if (touched && rules) {
-      const ref = L.get([lens, 'ref'], this.state.value)
+      const ref = L.get([lens, 'ref'], this.state.fields)
       const invalid = getValidationFromRules(rules, ref.current.value)
       return Object.keys(invalid).length === 0 ? null : invalid
     }
@@ -233,7 +231,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     const lensPath = props.for
     console.log({ lensPath })
     const value = L.get([lensPath], this.props.value)
-    const key = L.get([lensPath, 'uuid'], this.state.value) || uuid.v4()
+    const key = L.get([lensPath, 'uuid'], this.state.fields) || uuid.v4()
     if (value === null && props.value == null)
       throw Error('Input needs to have value in Form state or provided one in props')
     if (!_.isEmpty(rules) && (props.disabled || props.readOnly))
@@ -258,7 +256,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
           }
           this.setState(state => {
             return {
-              value: L.set(
+              fields: L.set(
                 lensPath,
                 {
                   rules,
@@ -267,7 +265,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
                   touched: false,
                   type: wrappedTypeName
                 },
-                state.value
+                state.fields
               )
             }
           })
@@ -298,7 +296,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
   ) => {
     // a hack to know if these are fed
     if (_.isObject(event.value) || _.isArray(event.value)) {
-      const oldIndexes = getIndexesFor(L.get([event.for], this.state.value))
+      const oldIndexes = getIndexesFor(L.get([event.for], this.state.fields))
       const newIndexes = getIndexesFor(event.value)
       const oneDeepOld = oldIndexes.map((v: any) => v[0]).filter((a: any) => a.length === 1)
       const oneDeepNew = newIndexes.map((v: any) => v[0]).filter((a: any) => a.length === 1)
@@ -329,7 +327,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       throw Error('Lens path does not exits in touchField: ' + lensPath.toString())
     }
     this.setState(state => {
-      return { value: L.set([lensPath, 'touched', L.optional], true, state.value) }
+      return { fields: L.set([lensPath, 'touched', L.optional], true, state.fields) }
     })
   }
   unTouchField = (lensPath: any) => {
@@ -338,7 +336,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       throw Error('Lens path does not exits in unTouchField: ' + lensPath.toString())
     }
     this.setState(state => {
-      return { value: L.set([lensPath, L.optional, 'touched', L.optional], false, state.value) }
+      return { fields: L.set([lensPath, L.optional, 'touched', L.optional], false, state.fields) }
     })
   }
   removeRule = (lensPath: any) => {
@@ -347,7 +345,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       throw Error('Lens path does not exits in removeRule: ' + lensPath.toString())
     }
     this.setState(state => {
-      return { value: L.remove([lensPath, L.optional, 'rules', L.optional], state.value) }
+      return { fields: L.remove([lensPath, L.optional, 'rules', L.optional], state.fields) }
     })
   }
   render() {
@@ -359,7 +357,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
           e.preventDefault()
           e.stopPropagation()
           const invalidFieldsLens = L.compose(
-            wrappedValues,
+            wrappedFields,
             L.when((wv: any) => {
               const validation = getValidationFromRules(wv.rules, wv.ref.current.value)
               return wv.rules && Object.keys(validation).length > 0
