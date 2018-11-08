@@ -213,7 +213,7 @@ function getValidationFromRules(rules: any, value: any): BrokenRules {
       const validation = ({ ...formRules, ...numberRules } as any)[key as any](value, ruleValue as any)
       return { validation, key }
     })
-    .filter(v => !!v.validation)
+    .filter(v => v.validation != null)
     .reduce((agg, { validation, key }) => {
       return {
         ...agg,
@@ -246,6 +246,17 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
   Validation = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     props: ValidationProps<T, A, U, S, K>
   ) => {
+    const hasMounted = !!L.get([props.for], this.state.fields)
+    if (!hasMounted) {
+      return props.children({
+        touched: false,
+        dirty: false,
+        invalid: {},
+        valid: false,
+        untouched: true,
+        pristine: true
+      })
+    }
     const invalid = this.getValidationForField(props.for)
     const touched = L.get([props.for, 'touched'], this.state.fields)
     const dirty = L.get([props.for, 'dirty'], this.state.fields)
