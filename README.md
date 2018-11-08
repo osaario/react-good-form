@@ -182,6 +182,67 @@ class Person extends React.Component {
 }
 ```
 
+## Dynamic rules
+
+```JSX
+import { Form, minLength, email } from "react-good-form"
+
+class Person extends React.Component {
+  state = {
+    name: "",
+    email: "",
+    phone: ""
+  }
+  render() {
+    return (
+      <Form
+        value={this.state}
+        onChange={person => {
+          this.setState(person)
+        }}
+        onSubmit={() => {
+          alert("Person: " + JSON.stringify(this.state))
+        }}
+      >
+        {({ Input, Validation, NumberInput }) => (
+          <div>
+            <div>
+              <label>Name</label>
+              <Input for="name" />
+            </div>
+            <Validation for="phone">
+              {phoneValidation => (
+                <Validation for="email">
+                  {emailValidation => (
+                    <Fragment>
+                      <div style={{ color: emailValidation.invalid && emailValidation.touched ? "red" : undefined }}>
+                        <label>Email</label>
+                        <Input for="email" email={!!minLength(this.state.phone, 8)} />
+                      </div>
+                      <div style={{ color: phoneValidation.invalid && phoneValidation.touched ? "red" : undefined }}>
+                        <label>Phone</label>
+                        <Input for="phone" minLength={!!email(this.state.email, true) ? 8 : 0} />
+                      </div>
+                      {(phoneValidation.invalid || emailValidation.invalid) && (
+                        <div>
+                          <small>Please provide email or phone</small>
+                        </div>
+                      )}
+                      <div />
+                    </Fragment>
+                  )}
+                </Validation>
+              )}
+            </Validation>
+            <button>Create account</button>
+          </div>
+        )}
+      </Form>
+    )
+  }
+}
+```
+
 ## Known issues:
 
 At the moment only supports static arrays.
