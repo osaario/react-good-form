@@ -7,6 +7,9 @@ import {
   min,
   max,
   maxLength,
+  stringMatches,
+  numberMatches,
+  booleanMatches,
   numberRule,
   rule,
   email,
@@ -17,8 +20,9 @@ import {
 const L: any = require('partial.lenses')
 import { getIndexesFor, wrappedFields, wrappedTypeName } from './lenshelpers'
 
-const formRules = { notEmpty, minLength, maxLength, email, regExp, rule }
-const numberRules = { min, max, rule: numberRule }
+const formRules = { notEmpty, minLength, maxLength, email, regExp, rule, matches: stringMatches }
+const numberRules = { min, max, rule: numberRule, matches: numberMatches }
+const checkBoxRules = { matches: booleanMatches }
 
 const omit = (obj: any, properties: string[]) => {
   const lookup: any = properties.reduce((acc, key) => {
@@ -76,6 +80,16 @@ type NumberInputRules = {
         : (typeof numberRules)[P] extends ValidationRuleType<RegExp> ? RegExp : NumberFunctionRule
 }
 
+type CheckboxRules = {
+  [P in keyof typeof checkBoxRules]?: (typeof checkBoxRules)[P] extends ValidationRuleType<boolean>
+    ? boolean
+    : (typeof checkBoxRules)[P] extends ValidationRuleType<number>
+      ? number
+      : (typeof checkBoxRules)[P] extends ValidationRuleType<string>
+        ? string
+        : (typeof checkBoxRules)[P] extends ValidationRuleType<RegExp> ? RegExp : NumberFunctionRule
+}
+
 export type BrokenRules = { [K in keyof typeof formRules]?: BrokenRule }
 
 export type ValidationProps<
@@ -117,7 +131,7 @@ export type NumberInputProps<
 > = _.Omit<React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, 'ref'> &
   NumberInputRules & {
     for: LensPathType<T, A, U, S, K>
-    value?: number | string | boolean
+    value?: number
   }
 export type InputProps<
   T,
@@ -129,6 +143,29 @@ export type InputProps<
   StringRules & {
     for: LensPathType<T, A, U, S, K>
     value?: number | string | boolean
+  }
+
+export type SelectProps<
+  T,
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
+> = _.Omit<React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>, 'ref'> & {
+  for: LensPathType<T, A, U, S, K>
+  value?: string
+}
+
+export type CheckboxProps<
+  T,
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
+> = _.Omit<React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, 'ref'> &
+  CheckboxRules & {
+    for: LensPathType<T, A, U, S, K>
+    checked?: boolean
   }
 
 type LensPathType<
@@ -166,6 +203,12 @@ export interface FormProps<T>
       TextArea: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
         props: TextAreaProps<T, A, U, S, K>
       ) => JSX.Element
+      Select: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        props: SelectProps<T, A, U, S, K>
+      ) => JSX.Element
+      Checkbox: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        props: CheckboxProps<T, A, U, S, K>
+      ) => JSX.Element
       Validation: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
         props: ValidationProps<T, A, U, S, K>
       ) => JSX.Element
@@ -178,19 +221,25 @@ export interface FormProps<T>
 
 class InputInner extends React.Component<
   React.DetailedHTMLProps<
-    React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement>,
-    HTMLInputElement | HTMLTextAreaElement
+    React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
   > & {
     onDidMount: (ref: React.RefObject<any>) => void
     onWillUnmount: () => void
     _textArea: boolean
+    _checkbox: boolean
+    _select: boolean
   }
 > {
   ref = React.createRef<any>()
   render() {
-    const { onDidMount, onWillUnmount, _textArea, ...restProps } = this.props
+    const { onDidMount, onWillUnmount, _textArea, _select, _checkbox, ...restProps } = this.props
     if (this.props._textArea) {
       return <textarea ref={this.ref as any} {...restProps} />
+    } else if (this.props._select) {
+      return <select ref={this.ref as any} {...restProps} />
+    } else if (this.props._checkbox) {
+      return <input ref={this.ref as any} {...restProps} type="checkbox" />
     } else {
       return <input ref={this.ref as any} {...restProps} />
     }
@@ -210,7 +259,10 @@ function getValidationFromRules(rules: any, value: any): BrokenRules {
   const validationsForField = Object.keys(withoutRef)
     .map(key => {
       const ruleValue = withoutRef[key]
-      const validation = ({ ...formRules, ...numberRules } as any)[key as any](value, ruleValue as any)
+      const validation = ({ ...formRules, ...numberRules, ...checkBoxRules } as any)[key as any](
+        value,
+        ruleValue as any
+      )
       return { validation, key }
     })
     .filter(v => v.validation != null)
@@ -227,7 +279,7 @@ function getValidationFromRules(rules: any, value: any): BrokenRules {
 export interface FormState {
   fields: any
 }
-const omitFromInputs = ['ref'].concat(Object.keys(formRules)).concat(Object.keys(numberRules))
+const omitFromInputs = ['ref', 'for'].concat(Object.keys(formRules)).concat(Object.keys(numberRules))
 export class Form<T> extends React.Component<FormProps<T>, FormState> {
   state: FormState = {
     // no pricings yet registered so lets just cast this
@@ -238,7 +290,10 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
     const rules = L.get([lens, 'rules'], this.state.fields)
     if (rules) {
       const ref = L.get([lens, 'ref'], this.state.fields)
-      const invalid = getValidationFromRules(rules, ref.current.value)
+      const invalid = getValidationFromRules(
+        rules,
+        ref.current.type === 'number' ? parseInt(ref.current.value, 10) : ref.current.value
+      )
       return Object.keys(invalid).length === 0 ? null : invalid
     }
     return null
@@ -274,6 +329,16 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
   ) => {
     return this.Input({ ...props, _textArea: true } as any)
   }
+  Select = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    props: SelectProps<T, A, U, S, K>
+  ) => {
+    return this.Input({ ...props, _select: true } as any)
+  }
+  Checkbox = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    props: CheckboxProps<T, A, U, S, K>
+  ) => {
+    return this.Input({ ...props, _checkbox: true } as any)
+  }
   NumberInput = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     props: NumberInputProps<T, A, U, S, K>
   ) => {
@@ -301,13 +366,21 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
           }
           const event = {
             for: props.for,
-            value: props.type === 'number' ? parseInt(e.target.value, 10) : e.target.value
+            value:
+              e.target.type === 'number'
+                ? parseInt(e.target.value, 10)
+                : e.target.type === 'checkbox'
+                  ? e.target.checked
+                  : e.target.value
           }
           this.emitScopedChange(event as any)
         }}
         _textArea={(props as any)._textArea}
+        _select={(props as any)._select}
+        _checkbox={(props as any)._checkbox}
         {...omit(props, omitFromInputs)}
         value={value == null ? props.value : value}
+        checked={!!value}
         key={JSON.stringify(rules) + JSON.stringify(props.for)}
         onDidMount={ref => {
           if (props.value === null) {
@@ -417,6 +490,8 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
               Input: this.Input,
               NumberInput: this.NumberInput,
               TextArea: this.TextArea,
+              Select: this.Select,
+              Checkbox: this.Checkbox,
               Validation: this.Validation
             },
             this.emitScopedChange

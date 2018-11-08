@@ -1,8 +1,15 @@
 {
   "name": "react-good-form",
-  "version": "0.0.13-development",
+  "version": "0.0.14-development",
   "description": "Good Form that supports nesting and provides validation",
-  "keywords": [],
+  "keywords": [
+    "react",
+    "form",
+    "validation",
+    "validated",
+    "nested",
+    "typed"
+  ],
   "main": "dist/react-good-form.umd.js",
   "module": "dist/react-good-form.es5.js",
   "typings": "dist/types/react-good-form.d.ts",
