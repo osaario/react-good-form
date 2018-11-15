@@ -20,9 +20,9 @@ import {
 const L: any = require('partial.lenses')
 import { getIndexesFor, wrappedFields, wrappedTypeName } from './lenshelpers'
 
-const formRules = { notEmpty, minLength, maxLength, email, regExp, rule, matches: stringMatches }
-const numberRules = { min, max, rule: numberRule, matches: numberMatches }
-const checkBoxRules = { matches: booleanMatches }
+export const formRules = { notEmpty, minLength, maxLength, email, regExp, rule, matches: stringMatches }
+export const numberRules = { min, max, rule: numberRule, matches: numberMatches }
+export const checkBoxRules = { matches: booleanMatches }
 
 const omit = (obj: any, properties: string[]) => {
   const lookup: any = properties.reduce((acc, key) => {
