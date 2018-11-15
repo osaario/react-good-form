@@ -1,6 +1,6 @@
 {
   "name": "react-good-form",
-  "version": "0.0.15-development",
+  "version": "0.0.16-development",
   "description": "Good Form that supports nesting and provides validation",
   "keywords": [
     "react",

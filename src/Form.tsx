@@ -168,7 +168,7 @@ export type CheckboxProps<
     checked?: boolean
   }
 
-type LensPathType<
+export type LensPathType<
   T,
   A extends keyof T,
   U extends keyof T[A],
@@ -180,7 +180,13 @@ type LensPathType<
     : [A, U]
   : (A | [A])
 
-type FormEventType<T, A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]> =
+export type FormEventType<
+  T,
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
+> =
   | { value: Partial<T[A][U][S][K]>; for: [A, U, S, K] }
   | { value: Partial<T[A][U][S]>; for: [A, U, S] }
   | { value: Partial<T[A][U]>; for: [A, U] }
