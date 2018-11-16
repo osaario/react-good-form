@@ -391,17 +391,28 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
       pristine: !dirty
     })
   }
-  TextAreaFormGroup = () => {
-    throw Error('You should provide your own implementation for Form Groups by inheriting the Form')
+  TextAreaFormGroup = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    props: TextAreaFormGroupProps<T, A, U, S, K>
+  ) => {
+
+    throw Error("You should provide your own implementation for Form Groups by inheriting the Form")
   }
-  InputFormGroup = () => {
-    throw Error('You should provide your own implementation for Form Groups by inheriting the Form')
+  InputFormGroup = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    props: InputFormGroupProps<T, A, U, S, K>
+  ) => {
+
+    throw Error("You should provide your own implementation for Form Groups by inheriting the Form")
   }
-  SelectFormGroup = () => {
-    throw Error('You should provide your own implementation for Form Groups by inheriting the Form')
+  NumberInputFormGroup = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    props: NumberInputFormGroupProps<T, A, U, S, K>
+  ) => {
+
+    throw Error("You should provide your own implementation for Form Groups by inheriting the Form")
   }
-  NumberInputFormGroup = () => {
-    throw Error('You should provide your own implementation for Form Groups by inheriting the Form')
+  SelectFormGroup = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    props: SelectFormGroupProps<T, A, U, S, K>
+  ) => {
+    throw Error("You should provide your own implementation for Form Groups by inheriting the Form")
   }
   TextArea = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     props: TextAreaProps<T, A, U, S, K>
