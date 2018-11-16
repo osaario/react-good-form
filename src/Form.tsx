@@ -111,6 +111,7 @@ export type ValidationProps<
     }
   ) => JSX.Element
 }
+
 export type TextAreaProps<
   T,
   A extends keyof T,
@@ -133,6 +134,15 @@ export type NumberInputProps<
     for: LensPathType<T, A, U, S, K>
     value?: number
   }
+
+export type NumberInputGroupProps<
+  T,
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
+> = NumberInputProps<T, A, U, S, K> & { children: React.ReactNode }
+
 export type InputProps<
   T,
   A extends keyof T,
@@ -167,6 +177,40 @@ export type CheckboxProps<
     for: LensPathType<T, A, U, S, K>
     checked?: boolean
   }
+
+type FormGroupAddons = { children: React.ReactNode; leftAddon?: React.ReactNode; rightAddon?: React.ReactNode }
+
+export type TextAreaFormGroupProps<
+  T,
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
+> = TextAreaProps<T, A, U, S, K> & FormGroupAddons
+
+export type InputFormGroupProps<
+  T,
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
+> = InputProps<T, A, U, S, K> & FormGroupAddons
+
+export type NumberInputFormGroupProps<
+  T,
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
+> = NumberInputProps<T, A, U, S, K> & FormGroupAddons
+
+export type SelectFormGroupProps<
+  T,
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
+> = SelectProps<T, A, U, S, K> & FormGroupAddons
 
 export type LensPathType<
   T,
@@ -217,6 +261,23 @@ export interface FormProps<T>
       ) => JSX.Element
       Validation: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
         props: ValidationProps<T, A, U, S, K>
+      ) => JSX.Element
+      InputFormGroup: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        props: InputFormGroupProps<T, A, U, S, K>
+      ) => JSX.Element
+      NumberInputFormGroup: <
+        A extends keyof T,
+        U extends keyof T[A],
+        S extends keyof T[A][U],
+        K extends keyof T[A][U][S]
+      >(
+        props: NumberInputFormGroupProps<T, A, U, S, K>
+      ) => JSX.Element
+      TextAreaFormGroup: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        props: TextAreaFormGroupProps<T, A, U, S, K>
+      ) => JSX.Element
+      SelectFormGroup: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        props: SelectFormGroupProps<T, A, U, S, K>
       ) => JSX.Element
     },
     emitScopedChange: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
@@ -329,6 +390,18 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
       untouched: !touched,
       pristine: !dirty
     })
+  }
+  TextAreaFormGroup = () => {
+    throw Error('You should provide your own implementation for Form Groups by inheriting the Form')
+  }
+  InputFormGroup = () => {
+    throw Error('You should provide your own implementation for Form Groups by inheriting the Form')
+  }
+  SelectFormGroup = () => {
+    throw Error('You should provide your own implementation for Form Groups by inheriting the Form')
+  }
+  NumberInputFormGroup = () => {
+    throw Error('You should provide your own implementation for Form Groups by inheriting the Form')
   }
   TextArea = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     props: TextAreaProps<T, A, U, S, K>
@@ -498,7 +571,11 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
               TextArea: this.TextArea,
               Select: this.Select,
               Checkbox: this.Checkbox,
-              Validation: this.Validation
+              Validation: this.Validation,
+              InputFormGroup: this.InputFormGroup,
+              NumberInputFormGroup: this.NumberInputFormGroup,
+              TextAreaFormGroup: this.TextAreaFormGroup,
+              SelectFormGroup: this.SelectFormGroup
             },
             this.emitScopedChange
           )}
