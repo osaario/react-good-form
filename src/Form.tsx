@@ -90,7 +90,9 @@ type CheckboxRules = {
         : (typeof checkBoxRules)[P] extends ValidationRuleType<RegExp> ? RegExp : NumberFunctionRule
 }
 
-export type BrokenRules = { [K in keyof typeof formRules]?: BrokenRule }
+export type BrokenRules = { [K in keyof typeof formRules]?: BrokenRule } &
+  { [K in keyof typeof numberRules]?: BrokenRule } &
+  { [K in keyof typeof checkBoxRules]?: BrokenRule }
 
 export type ValidationProps<
   T,
@@ -178,7 +180,12 @@ export type CheckboxProps<
     checked?: boolean
   }
 
-type FormGroupAddons = { children: React.ReactNode; leftAddon?: React.ReactNode; rightAddon?: React.ReactNode }
+type FormGroupAddons = {
+  children: React.ReactNode
+  leftAddon?: React.ReactNode
+  rightAddon?: React.ReactNode
+  errorForBrokenRules?: (brokenRules: BrokenRules) => string
+}
 
 export type TextAreaFormGroupProps<
   T,
@@ -211,6 +218,17 @@ export type SelectFormGroupProps<
   S extends keyof T[A][U],
   K extends keyof T[A][U][S]
 > = SelectProps<T, A, U, S, K> & FormGroupAddons
+
+export type CheckboxGroupProps<
+  T,
+  A extends keyof T,
+  U extends keyof T[A],
+  S extends keyof T[A][U],
+  K extends keyof T[A][U][S]
+> = CheckboxProps<T, A, U, S, K> & {
+  children: React.ReactNode
+  errorForBrokenRules?: (brokenRules: BrokenRules) => string
+}
 
 export type LensPathType<
   T,
@@ -278,6 +296,9 @@ export interface FormProps<T>
       ) => JSX.Element
       SelectFormGroup: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
         props: SelectFormGroupProps<T, A, U, S, K>
+      ) => JSX.Element
+      CheckboxGroup: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        props: CheckboxGroupProps<T, A, U, S, K>
       ) => JSX.Element
     },
     emitScopedChange: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
@@ -414,6 +435,13 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
   }
   SelectFormGroup = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     props: SelectFormGroupProps<T, A, U, S, K>
+  ): JSX.Element => {
+    throw Error(
+      'You should provide your own implementation for Form Groups by inheriting the Form. Field:  ' + props.for
+    )
+  }
+  CheckboxGroup = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    props: CheckboxGroupProps<T, A, U, S, K>
   ): JSX.Element => {
     throw Error(
       'You should provide your own implementation for Form Groups by inheriting the Form. Field:  ' + props.for
@@ -591,7 +619,8 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
               InputFormGroup: this.InputFormGroup,
               NumberInputFormGroup: this.NumberInputFormGroup,
               TextAreaFormGroup: this.TextAreaFormGroup,
-              SelectFormGroup: this.SelectFormGroup
+              SelectFormGroup: this.SelectFormGroup,
+              CheckboxGroup: this.CheckboxGroup
             },
             this.emitScopedChange
           )}
