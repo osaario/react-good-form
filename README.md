@@ -10,7 +10,7 @@ npm install react-good-form
 
 ## Simple Example
 
-**Good Form** supports basic validations such as `email`, `minLength`, `maxLength` etc. out of the box. It automatically emits `onChange` events and provides values for fields.
+**Good Form** supports basic validations such as `email`, `minLength`, `maxLength` etc. out of the box. It automatically emits `onChange` events and provides values for fields. `onSubmit` callback is only triggered when submitting a valid form. Otherwise form will focus to first invalid field.
 
 ```JSX
 import { Form } from "react-good-form"
