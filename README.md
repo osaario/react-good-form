@@ -76,64 +76,23 @@ export default Login
 
 ## Extendable
 
-You can create arbitary rules easily with *regular expressions* or just by writing your own rule functions.
+You can create arbitary rules by providing a rule function.
 
 ```JSX
-<Validation for="email">
-  {({ invalid, touched }) => (
-    <div style={{ color: invalid && touched ? "red" : undefined }}>
-      <label>Email</label>
-      <Input
-        rule={email => email.endsWith("hotmail.com")}
-        onChange={e => {
-          this.setState({
-            email: e.target.value
-          })
-        }}
-        email={true}
-        for="email"
-      />
-      {invalid &&
-        touched &&
-        (invalid.email ? (
-          <div>
-            <small>Invalid email</small>
-          </div>
-        ) : (
-          <div>
-            <small>Needs to be hotmail address for some reason</small>
-          </div>
-        ))}
-    </div>
-  )}
-</Validation>
+<Input
+  rule={email => email.endsWith("hotmail.com")}
+  email={true}
+  for="email"
+/>
 ```
+Or an regular expression.
 
 ```JSX
-<Validation for="password">
-  {({ invalid, touched }) => (
-    <div style={{ color: invalid && touched ? "red" : undefined }}>
-      <label>Password</label>
-      <Input
-        onChange={e => {
-          this.setState({
-            password: e.target.value
-          })
-        }}
-        type="password"
-        regExp={/(123456|password)/}
-        for="password"
-      />
-      {invalid &&
-        touched &&
-        invalid.regExp && (
-          <div>
-            <small>Your password is too hard to remember</small>
-          </div>
-        )}
-    </div>
-  )}
-</Validation>
+<Input
+  type="password"
+  regExp={/(123456|password)/}
+  for="password"
+/>
 ```
 
 ## Supports nested structures
