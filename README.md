@@ -13,13 +13,11 @@ npm install react-good-form
 **Good Form** supports basic validations such as `email`, `minLength`, `maxLength` etc. out of the box. It automatically emits `onChange` events and provides values for fields.
 
 ```JSX
-import React from "react"
 import { Form } from "react-good-form"
 
-class Login extends React.Component {
+class EmailForm extends React.Component {
   state = {
-    email: "",
-    password: ""
+    email: ""
   }
   render() {
     return (
@@ -29,7 +27,7 @@ class Login extends React.Component {
           this.setState(person)
         }}
         onSubmit={() => {
-          alert("Login with credentials: " + JSON.stringify(this.state))
+          alert(this.state.email)
         }}
       >
         {({ Input, Validation }) => (
@@ -39,39 +37,17 @@ class Login extends React.Component {
               {({ touched, invalid }) => (
                 <div style={{ color: invalid && touched ? "red" : undefined }}>
                   <label>Email</label>
-                  <Input email={true} for="email" />
-                  {invalid &&
-                    touched && (
-                      <div>
-                        <small>Invalid email</small>
-                      </div>
-                    )}
+                  <Input email notEmpty for="email" />
                 </div>
               )}
             </Validation>
-            <Validation for="password">
-              {({ touched, invalid }) => (
-                <div style={{ color: invalid && touched ? "red" : undefined }}>
-                  <label>Password</label>
-                  <Input type="password" for="password" minLength={5} />
-                  {touched &&
-                    invalid &&
-                    invalid.minLength && (
-                      <div>
-                        <small>Password must be atleast {invalid.minLength} characters.</small>
-                      </div>
-                    )}
-                </div>
-              )}
-            </Validation>
-            <button>Log in</button>
+            <button>OK</button>
           </div>
         )}
       </Form>
     )
   }
 }
-export default Login
 ```
 
 ## Extendable
