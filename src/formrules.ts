@@ -6,7 +6,7 @@ export type ValidationRuleType<
 // https://emailregex.com/
 const emailRegex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
 //
-export const notEmpty: ValidationRuleType<boolean> = (value, ruleValue) => {
+export const required: ValidationRuleType<boolean> = (value, ruleValue) => {
   if (!ruleValue) return null
   const pass = !(value == null || value === '')
   if (pass) return null
@@ -35,22 +35,22 @@ export const maxLength: ValidationRuleType<number> = (value, ruleValue) => {
   else return ruleValue
 }
 
-const matches: ValidationRuleType<number | string | boolean> = (value, ruleValue) => {
+const equals: ValidationRuleType<number | string | boolean> = (value, ruleValue) => {
   const pass = value === ruleValue
   if (pass) return null
   else return ruleValue
 }
 
 export const booleanMatches: ValidationRuleType<boolean> = (value, ruleValue) => {
-  return matches(value, ruleValue)
+  return equals(value, ruleValue)
 }
 
 export const numberMatches: ValidationRuleType<number> = (value, ruleValue) => {
-  return matches(value, ruleValue)
+  return equals(value, ruleValue)
 }
 
 export const stringMatches: ValidationRuleType<string> = (value, ruleValue) => {
-  return matches(value, ruleValue)
+  return equals(value, ruleValue)
 }
 
 export const min: ValidationRuleType<number> = (value, ruleValue) => {

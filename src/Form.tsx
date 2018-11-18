@@ -2,7 +2,7 @@ import * as React from 'react'
 import {
   ValidationRuleType,
   BrokenRule,
-  notEmpty,
+  required,
   minLength,
   min,
   max,
@@ -20,9 +20,9 @@ import {
 const L: any = require('partial.lenses')
 import { getIndexesFor, wrappedFields, wrappedTypeName } from './lenshelpers'
 
-export const formRules = { notEmpty, minLength, maxLength, email, regExp, rule, matches: stringMatches }
-export const numberRules = { min, max, rule: numberRule, matches: numberMatches }
-export const checkBoxRules = { matches: booleanMatches }
+export const formRules = { required, minLength, maxLength, email, regExp, rule, equals: stringMatches }
+export const numberRules = { min, max, rule: numberRule, equals: numberMatches }
+export const checkBoxRules = { equals: booleanMatches }
 
 const omit = (obj: any, properties: string[]) => {
   const lookup: any = properties.reduce((acc, key) => {
@@ -125,37 +125,20 @@ export type TextAreaProps<
     for: LensPathType<T, A, U, S, K>
     value?: number | string | boolean
   }
-export type NumberInputProps<
-  T,
-  A extends keyof T,
-  U extends keyof T[A],
-  S extends keyof T[A][U],
-  K extends keyof T[A][U][S]
-> = _.Omit<React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, 'ref'> &
-  NumberInputRules & {
-    for: LensPathType<T, A, U, S, K>
-    value?: number
-  }
 
-export type NumberInputGroupProps<
-  T,
-  A extends keyof T,
-  U extends keyof T[A],
-  S extends keyof T[A][U],
-  K extends keyof T[A][U][S]
-> = NumberInputProps<T, A, U, S, K> & { children: React.ReactNode }
-
+export type InputType = 'text' | 'number' | 'checkbox' | undefined
 export type InputProps<
   T,
   A extends keyof T,
   U extends keyof T[A],
   S extends keyof T[A][U],
-  K extends keyof T[A][U][S]
+  K extends keyof T[A][U][S],
+  I extends InputType
 > = _.Omit<React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, 'ref'> &
-  StringRules & {
+  (I extends 'number' ? NumberInputRules : I extends 'checkbox' ? CheckboxRules : StringRules) & {
     for: LensPathType<T, A, U, S, K>
     value?: number | string | boolean
-  }
+  } & { type?: I }
 
 export type SelectProps<
   T,
@@ -167,18 +150,6 @@ export type SelectProps<
   for: LensPathType<T, A, U, S, K>
   value?: string
 }
-
-export type CheckboxProps<
-  T,
-  A extends keyof T,
-  U extends keyof T[A],
-  S extends keyof T[A][U],
-  K extends keyof T[A][U][S]
-> = _.Omit<React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, 'ref'> &
-  CheckboxRules & {
-    for: LensPathType<T, A, U, S, K>
-    checked?: boolean
-  }
 
 type FormGroupAddons = {
   children: React.ReactNode
@@ -200,16 +171,9 @@ export type InputFormGroupProps<
   A extends keyof T,
   U extends keyof T[A],
   S extends keyof T[A][U],
-  K extends keyof T[A][U][S]
-> = InputProps<T, A, U, S, K> & FormGroupAddons
-
-export type NumberInputFormGroupProps<
-  T,
-  A extends keyof T,
-  U extends keyof T[A],
-  S extends keyof T[A][U],
-  K extends keyof T[A][U][S]
-> = NumberInputProps<T, A, U, S, K> & FormGroupAddons
+  K extends keyof T[A][U][S],
+  I extends InputType
+> = InputProps<T, A, U, S, K, I> & FormGroupAddons
 
 export type SelectFormGroupProps<
   T,
@@ -218,17 +182,6 @@ export type SelectFormGroupProps<
   S extends keyof T[A][U],
   K extends keyof T[A][U][S]
 > = SelectProps<T, A, U, S, K> & FormGroupAddons
-
-export type CheckboxGroupProps<
-  T,
-  A extends keyof T,
-  U extends keyof T[A],
-  S extends keyof T[A][U],
-  K extends keyof T[A][U][S]
-> = CheckboxProps<T, A, U, S, K> & {
-  children: React.ReactNode
-  errorForBrokenRules?: (brokenRules: BrokenRules) => string
-}
 
 export type LensPathType<
   T,
@@ -262,11 +215,14 @@ export interface FormProps<T>
   onChange: (data: T) => void
   children: (
     Form: {
-      Input: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
-        props: InputProps<T, A, U, S, K>
-      ) => JSX.Element
-      NumberInput: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
-        props: NumberInputProps<T, A, U, S, K>
+      Input: <
+        A extends keyof T,
+        U extends keyof T[A],
+        S extends keyof T[A][U],
+        K extends keyof T[A][U][S],
+        I extends InputType
+      >(
+        props: InputProps<T, A, U, S, K, I>
       ) => JSX.Element
       TextArea: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
         props: TextAreaProps<T, A, U, S, K>
@@ -274,28 +230,20 @@ export interface FormProps<T>
       Select: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
         props: SelectProps<T, A, U, S, K>
       ) => JSX.Element
-      Checkbox: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
-        props: CheckboxProps<T, A, U, S, K>
-      ) => JSX.Element
-      InputFormGroup: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
-        props: InputFormGroupProps<T, A, U, S, K>
-      ) => JSX.Element
-      NumberInputFormGroup: <
+      InputFormGroup: <
         A extends keyof T,
         U extends keyof T[A],
         S extends keyof T[A][U],
-        K extends keyof T[A][U][S]
+        K extends keyof T[A][U][S],
+        I extends InputType
       >(
-        props: NumberInputFormGroupProps<T, A, U, S, K>
+        props: InputFormGroupProps<T, A, U, S, K, I>
       ) => JSX.Element
       TextAreaFormGroup: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
         props: TextAreaFormGroupProps<T, A, U, S, K>
       ) => JSX.Element
       SelectFormGroup: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
         props: SelectFormGroupProps<T, A, U, S, K>
-      ) => JSX.Element
-      CheckboxGroup: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
-        props: CheckboxGroupProps<T, A, U, S, K>
       ) => JSX.Element
     },
     validations: {
@@ -332,19 +280,16 @@ class InputInner extends React.Component<
     onDidMount: (ref: React.RefObject<any>) => void
     onWillUnmount: () => void
     _textArea: boolean
-    _checkbox: boolean
     _select: boolean
   }
 > {
   ref = React.createRef<any>()
   render() {
-    const { onDidMount, onWillUnmount, _textArea, _select, _checkbox, ...restProps } = this.props
+    const { onDidMount, onWillUnmount, _textArea, _select, ...restProps } = this.props
     if (this.props._textArea) {
       return <textarea ref={this.ref as any} {...restProps} />
     } else if (this.props._select) {
       return <select ref={this.ref as any} {...restProps} />
-    } else if (this.props._checkbox) {
-      return <input ref={this.ref as any} {...restProps} type="checkbox" />
     } else {
       return <input ref={this.ref as any} {...restProps} />
     }
@@ -410,15 +355,14 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
       'You should provide your own implementation for Form Groups by inheriting the Form. Field:  ' + props.for
     )
   }
-  InputFormGroup = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
-    props: InputFormGroupProps<T, A, U, S, K>
-  ): JSX.Element => {
-    throw Error(
-      'You should provide your own implementation for Form Groups by inheriting the Form. Field:  ' + props.for
-    )
-  }
-  NumberInputFormGroup = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
-    props: NumberInputFormGroupProps<T, A, U, S, K>
+  InputFormGroup = <
+    A extends keyof T,
+    U extends keyof T[A],
+    S extends keyof T[A][U],
+    K extends keyof T[A][U][S],
+    I extends InputType
+  >(
+    props: InputFormGroupProps<T, A, U, S, K, I>
   ): JSX.Element => {
     throw Error(
       'You should provide your own implementation for Form Groups by inheriting the Form. Field:  ' + props.for
@@ -426,13 +370,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
   }
   SelectFormGroup = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     props: SelectFormGroupProps<T, A, U, S, K>
-  ): JSX.Element => {
-    throw Error(
-      'You should provide your own implementation for Form Groups by inheriting the Form. Field:  ' + props.for
-    )
-  }
-  CheckboxGroup = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
-    props: CheckboxGroupProps<T, A, U, S, K>
   ): JSX.Element => {
     throw Error(
       'You should provide your own implementation for Form Groups by inheriting the Form. Field:  ' + props.for
@@ -448,22 +385,20 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
   ) => {
     return this.Input({ ...props, _select: true } as any)
   }
-  Checkbox = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
-    props: CheckboxProps<T, A, U, S, K>
-  ) => {
-    return this.Input({ ...props, _checkbox: true } as any)
-  }
-  NumberInput = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
-    props: NumberInputProps<T, A, U, S, K>
-  ) => {
-    return this.Input({ ...props, type: 'number' } as any)
-  }
-  Input = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
-    props: InputProps<T, A, U, S, K>
+  Input = <
+    A extends keyof T,
+    U extends keyof T[A],
+    S extends keyof T[A][U],
+    K extends keyof T[A][U][S],
+    I extends InputType
+  >(
+    props: InputProps<T, A, U, S, K, I>
   ) => {
     let rules = pick(props, Object.keys(formRules)) as StringRules
     if (props.type === 'number') {
       rules = pick(props, Object.keys(numberRules)) as any
+    } else if (props.type === 'checkbox') {
+      rules = pick(props, Object.keys(checkBoxRules)) as any
     }
     const lensPath = props.for
     const value = L.get([lensPath], this.props.value)
@@ -491,7 +426,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
         }}
         _textArea={(props as any)._textArea}
         _select={(props as any)._select}
-        _checkbox={(props as any)._checkbox}
         {...omit(props, omitFromInputs)}
         value={value == null ? props.value : value}
         checked={!!value}
@@ -638,15 +572,11 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
           {this.props.children(
             {
               Input: this.Input,
-              NumberInput: this.NumberInput,
               TextArea: this.TextArea,
               Select: this.Select,
-              Checkbox: this.Checkbox,
               InputFormGroup: this.InputFormGroup,
-              NumberInputFormGroup: this.NumberInputFormGroup,
               TextAreaFormGroup: this.TextAreaFormGroup,
-              SelectFormGroup: this.SelectFormGroup,
-              CheckboxGroup: this.CheckboxGroup
+              SelectFormGroup: this.SelectFormGroup
             },
             {
               invalid: this.invalid,
