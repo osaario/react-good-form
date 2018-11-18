@@ -30,17 +30,13 @@ class EmailForm extends React.Component {
           alert(this.state.email)
         }}
       >
-        {({ Input, Validation }) => (
+        {({ Input }, { invalid, touched }) => (
           <div>
             <h1>Log in</h1>
-            <Validation for="email">
-              {({ touched, invalid }) => (
-                <div style={{ color: invalid && touched ? "red" : undefined }}>
-                  <label>Email</label>
-                  <Input email notEmpty for="email" />
-                </div>
-              )}
-            </Validation>
+            <div style={{ color: invalid("email") && touched("email") ? "red" : undefined }}>
+              <label>Email</label>
+              <Input email notEmpty for="email" />
+            </div>
             <button>OK</button>
           </div>
         )}
@@ -76,75 +72,10 @@ Or an regular expression.
 Provide paths to nested structures as arrays.
 
 ```JSX
-<Validation for={["address", "street"]}>
-  {({ invalid, touched }) => (
-    <div style={{ color: invalid && touched && "red" }}>
-      <label>Street</label>
-      <Input for={["address", "street"]} minLength={5} maxLength={100} />
-    </div>
-  )}
-</Validation>
-```
-
-## Dynamic rules
-
-```JSX
-import { Form, minLength, email } from "react-good-form"
-
-class Person extends React.Component {
-  state = {
-    name: "",
-    email: "",
-    phone: ""
-  }
-  render() {
-    return (
-      <Form
-        value={this.state}
-        onChange={person => {
-          this.setState(person)
-        }}
-        onSubmit={() => {
-          alert("Person: " + JSON.stringify(this.state))
-        }}
-      >
-        {({ Input, Validation, NumberInput }) => (
-          <div>
-            <div>
-              <label>Name</label>
-              <Input for="name" />
-            </div>
-            <Validation for="phone">
-              {phoneValidation => (
-                <Validation for="email">
-                  {emailValidation => (
-                    <Fragment>
-                      <div style={{ color: emailValidation.invalid && emailValidation.touched ? "red" : undefined }}>
-                        <label>Email</label>
-                        <Input for="email" email={!!minLength(this.state.phone, 8)} />
-                      </div>
-                      <div style={{ color: phoneValidation.invalid && phoneValidation.touched ? "red" : undefined }}>
-                        <label>Phone</label>
-                        <Input for="phone" minLength={!!email(this.state.email, true) ? 8 : 0} />
-                      </div>
-                      {(phoneValidation.invalid || emailValidation.invalid) && (
-                        <div>
-                          <small>Please provide email or phone</small>
-                        </div>
-                      )}
-                      <div />
-                    </Fragment>
-                  )}
-                </Validation>
-              )}
-            </Validation>
-            <button>Create account</button>
-          </div>
-        )}
-      </Form>
-    )
-  }
-}
+<div style={{ color: invalid(["address", "street"]) && touched(["address", "street"]) && "red" }}>
+  <label>Street</label>
+  <Input for={["address", "street"]} minLength={5} maxLength={100} />
+</div>
 ```
 
 ## Known issues:
