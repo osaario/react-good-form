@@ -76,45 +76,14 @@ Or an regular expression.
 Provide paths to nested structures as arrays.
 
 ```JSX
-class Person extends React.Component {
-  state = {
-    name: "",
-    address: {
-      street: ""
-    }
-  }
-  render() {
-    return (
-      <Form
-        value={this.state}
-        onChange={person => {
-          this.setState(person)
-        }}
-        onSubmit={() => {
-          alert("Person: " + JSON.stringify(this.state))
-        }}
-      >
-        {({ Input, Validation, NumberInput }) => (
-          <div>
-            <div>
-              <label>Name</label>
-              <Input for="name" />
-            </div>
-            <Validation for={["address", "street"]}>
-              {({ invalid, touched }) => (
-                <div style={{ color: invalid && touched && "red" }}>
-                  <label>Street</label>
-                  <Input for={["address", "street"]} minLength={5} maxLength={100} />
-                </div>
-              )}
-            </Validation>
-            <button>Log in</button>
-          </div>
-        )}
-      </Form>
-    )
-  }
-}
+<Validation for={["address", "street"]}>
+  {({ invalid, touched }) => (
+    <div style={{ color: invalid && touched && "red" }}>
+      <label>Street</label>
+      <Input for={["address", "street"]} minLength={5} maxLength={100} />
+    </div>
+  )}
+</Validation>
 ```
 
 ## Dynamic rules
