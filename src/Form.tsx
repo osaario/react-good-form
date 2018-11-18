@@ -277,9 +277,6 @@ export interface FormProps<T>
       Checkbox: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
         props: CheckboxProps<T, A, U, S, K>
       ) => JSX.Element
-      Validation: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
-        props: ValidationProps<T, A, U, S, K>
-      ) => JSX.Element
       InputFormGroup: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
         props: InputFormGroupProps<T, A, U, S, K>
       ) => JSX.Element
@@ -300,6 +297,26 @@ export interface FormProps<T>
       CheckboxGroup: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
         props: CheckboxGroupProps<T, A, U, S, K>
       ) => JSX.Element
+    },
+    validations: {
+      invalid: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        path: LensPathType<T, A, U, S, K>
+      ) => null | BrokenRules
+      valid: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        path: LensPathType<T, A, U, S, K>
+      ) => boolean
+      touched: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        path: LensPathType<T, A, U, S, K>
+      ) => boolean
+      untouched: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        path: LensPathType<T, A, U, S, K>
+      ) => boolean
+      dirty: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        path: LensPathType<T, A, U, S, K>
+      ) => boolean
+      pristine: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+        path: LensPathType<T, A, U, S, K>
+      ) => boolean
     },
     emitScopedChange: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
       event: FormEventType<T, A, U, S, K>
@@ -385,32 +402,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
       return Object.keys(invalid).length === 0 ? null : invalid
     }
     return null
-  }
-  Validation = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
-    props: ValidationProps<T, A, U, S, K>
-  ) => {
-    const hasMounted = !!L.get([props.for], this.state.fields)
-    if (!hasMounted) {
-      return props.children({
-        touched: false,
-        dirty: false,
-        invalid: {},
-        valid: false,
-        untouched: true,
-        pristine: true
-      })
-    }
-    const invalid = this.getValidationForField(props.for)
-    const touched = L.get([props.for, 'touched'], this.state.fields)
-    const dirty = L.get([props.for, 'dirty'], this.state.fields)
-    return props.children({
-      touched,
-      dirty,
-      invalid: invalid || false,
-      valid: !invalid,
-      untouched: !touched,
-      pristine: !dirty
-    })
   }
   TextAreaFormGroup = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     props: TextAreaFormGroupProps<T, A, U, S, K>
@@ -581,6 +572,42 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
       this.props.onChange(value)
     }
   }
+  valid = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    path: LensPathType<T, A, U, S, K>
+  ) => {
+    return !this.getValidationForField(path)
+    // a hack to know if these are fed
+  }
+  invalid = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    path: LensPathType<T, A, U, S, K>
+  ) => {
+    return this.getValidationForField(path)
+    // a hack to know if these are fed
+  }
+  touched = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    path: LensPathType<T, A, U, S, K>
+  ) => {
+    return L.get([path, 'touched'], this.state.fields)
+    // a hack to know if these are fed
+  }
+  untouched = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    path: LensPathType<T, A, U, S, K>
+  ) => {
+    return !this.touched(path)
+    // a hack to know if these are fed
+  }
+  dirty = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    path: LensPathType<T, A, U, S, K>
+  ) => {
+    return L.get([path, 'dirty'], this.state.fields)
+    // a hack to know if these are fed
+  }
+  pristine = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    path: LensPathType<T, A, U, S, K>
+  ) => {
+    return !this.dirty(path)
+    // a hack to know if these are fed
+  }
   render() {
     const props = omit(this.props, ['value', 'onChange'])
     return (
@@ -615,12 +642,19 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
               TextArea: this.TextArea,
               Select: this.Select,
               Checkbox: this.Checkbox,
-              Validation: this.Validation,
               InputFormGroup: this.InputFormGroup,
               NumberInputFormGroup: this.NumberInputFormGroup,
               TextAreaFormGroup: this.TextAreaFormGroup,
               SelectFormGroup: this.SelectFormGroup,
               CheckboxGroup: this.CheckboxGroup
+            },
+            {
+              invalid: this.invalid,
+              valid: this.valid,
+              touched: this.touched,
+              untouched: this.untouched,
+              dirty: this.dirty,
+              pristine: this.pristine
             },
             this.emitScopedChange
           )}

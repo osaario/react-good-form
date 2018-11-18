@@ -15,7 +15,8 @@ export const notEmpty: ValidationRuleType<boolean> = (value, ruleValue) => {
 
 export const email: ValidationRuleType<boolean> = (value, ruleValue) => {
   if (!ruleValue) return null
-  const pass = value && emailRegex.test(value)
+  // let empty pass
+  const pass = !value || emailRegex.test(value)
   if (pass) return null
   else return ruleValue
 }
