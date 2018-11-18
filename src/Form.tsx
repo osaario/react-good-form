@@ -126,7 +126,7 @@ export type TextAreaProps<
     value?: number | string | boolean
   }
 
-export type InputType = 'text' | 'number' | 'checkbox' | undefined
+export type InputType = 'text' | 'number' | 'checkbox' | 'password' | undefined
 export type InputProps<
   T,
   A extends keyof T,
