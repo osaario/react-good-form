@@ -342,7 +342,11 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
       const ref = L.get([lens, 'ref'], this.state.fields)
       const invalid = getValidationFromRules(
         rules,
-        ref.current.type === 'number' ? parseInt(ref.current.value, 10) : ref.current.value
+        ref.current.type === 'number'
+          ? parseInt(ref.current.value, 10)
+          : ref.current.type === 'checkbox'
+            ? ref.current.checked
+            : ref.current.value
       )
       return Object.keys(invalid).length === 0 ? null : invalid
     }
@@ -486,7 +490,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
       const oldIndexes = getIndexesFor(L.get([event.for], this.state.fields))
       const oneDeepOld = oldIndexes.map((v: any) => v[0]).filter((a: any) => a.length === 1)
       const oneDeepNew = newIndexes.map((v: any) => v[0]).filter((a: any) => a.length === 1)
-      console.log({ oldIndexes, newIndexes, oneDeepOld, oneDeepNew })
       if (JSON.stringify(oldIndexes.map((v: any) => v[0])) !== JSON.stringify(newIndexes.map((v: any) => v[0]))) {
         console.error(
           'Detected a change to datastructure, removing elements or changing array order leads to undefined behaviour'
@@ -553,7 +556,14 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
           const invalidFieldsLens = L.compose(
             wrappedFields,
             L.when((wv: any) => {
-              const validation = getValidationFromRules(wv.rules, wv.ref.current.value)
+              const validation = getValidationFromRules(
+                wv.rules,
+                wv.ref.current.type === 'number'
+                  ? parseInt(wv.ref.current.value, 10)
+                  : wv.ref.current.type === 'checkbox'
+                    ? wv.ref.current.checked
+                    : wv.ref.current.value
+              )
               return wv.rules && Object.keys(validation).length > 0
             })
           )

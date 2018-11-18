@@ -35,22 +35,22 @@ export const maxLength: ValidationRuleType<number> = (value, ruleValue) => {
   else return ruleValue
 }
 
-const equals: ValidationRuleType<number | string | boolean> = (value, ruleValue) => {
+const matches: ValidationRuleType<number | string | boolean> = (value, ruleValue) => {
   const pass = value === ruleValue
   if (pass) return null
   else return ruleValue
 }
 
 export const booleanMatches: ValidationRuleType<boolean> = (value, ruleValue) => {
-  return equals(value, ruleValue)
+  return matches(value, ruleValue)
 }
 
 export const numberMatches: ValidationRuleType<number> = (value, ruleValue) => {
-  return equals(value, ruleValue)
+  return matches(value, ruleValue)
 }
 
 export const stringMatches: ValidationRuleType<string> = (value, ruleValue) => {
-  return equals(value, ruleValue)
+  return matches(value, ruleValue)
 }
 
 export const min: ValidationRuleType<number> = (value, ruleValue) => {
