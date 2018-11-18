@@ -35,7 +35,7 @@ class EmailForm extends React.Component {
             <h1>Log in</h1>
             <div style={{ color: invalid("email") && touched("email") ? "red" : undefined }}>
               <label>Email</label>
-              <Input email notEmpty for="email" />
+              <Input email required for="email" />
             </div>
             <button>OK</button>
           </div>
