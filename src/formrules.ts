@@ -6,33 +6,42 @@ export type ValidationRuleType<
 // https://emailregex.com/
 const emailRegex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
 //
+
+function checkTypes(
+  value: any,
+  ruleValue: any,
+  valueType: 'string' | 'boolean' | 'number',
+  ruleValueType: 'string' | 'boolean' | 'number' | 'object' | 'function'
+) {
+  if (typeof value !== valueType) {
+    throw Error(`Invalid type ${typeof value} for value in a form field. Should be: ${valueType}.`)
+  } else if (typeof value !== valueType) {
+    throw Error(`Invalid type ${typeof ruleValue} for rule value in a form field. Should be: ${ruleValueType}.`)
+  }
+}
+
 export const required: ValidationRuleType<boolean> = (value, ruleValue) => {
+  checkTypes(value, ruleValue, 'string', 'boolean')
   if (!ruleValue) return null
-  const pass = !(value == null || value === '')
-  if (pass) return null
-  else return ruleValue
+  return !(value == null || value === '') ? null : ruleValue
 }
 
 export const email: ValidationRuleType<boolean> = (value, ruleValue) => {
+  checkTypes(value, ruleValue, 'string', 'boolean')
   if (!ruleValue) return null
-  // let empty pass
-  const pass = !value || emailRegex.test(value)
-  if (pass) return null
-  else return ruleValue
+  return !value || emailRegex.test(value) ? null : ruleValue
 }
 
 export const minLength: ValidationRuleType<number> = (value, ruleValue) => {
+  checkTypes(value, ruleValue, 'string', 'number')
   if (!ruleValue) return null
-  const pass = value && value.length >= ruleValue
-  if (pass) return null
-  else return ruleValue
+  return value.length >= ruleValue ? null : ruleValue
 }
 
 export const maxLength: ValidationRuleType<number> = (value, ruleValue) => {
-  if (!ruleValue) return null
-  const pass = value && value.length <= ruleValue
-  if (pass) return null
-  else return ruleValue
+  checkTypes(value, ruleValue, 'string', 'number')
+  if (ruleValue == null) return null
+  return value.length <= ruleValue ? null : ruleValue
 }
 
 const matches: ValidationRuleType<number | string | boolean> = (value, ruleValue) => {
