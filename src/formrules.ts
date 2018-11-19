@@ -43,7 +43,6 @@ export const minLength: ValidationRuleType<number> = (value, ruleValue) => {
 
 export const maxLength: ValidationRuleType<number> = (value, ruleValue) => {
   checkTypes(value, ruleValue, 'string', 'number', 'maxLength')
-  if (ruleValue == null) return null
   return value.length <= ruleValue ? null : ruleValue
 }
 
