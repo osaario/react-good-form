@@ -529,7 +529,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
           e.stopPropagation()
           const indexes = getIndexesFor(this.props.value)
           const invalidFields = indexes.reduce((acc: any, index: any) => {
-            console.log({ index, acc })
             const value = index[1]
             const field = L.get(index[0], this.state.fields)
             if (!field || !field.rules) {
@@ -540,7 +539,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
               return acc
             }
           }, [])
-          console.log({ invalidFields })
           if (invalidFields.length > 0) {
             if (invalidFields[0].ref.current.props && invalidFields[0].ref.current.props.type === 'price') {
               ;(findDOMNode(invalidFields[0].ref.current) as any).focus()
