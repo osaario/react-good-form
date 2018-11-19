@@ -11,35 +11,38 @@ function checkTypes(
   value: any,
   ruleValue: any,
   valueType: 'string' | 'boolean' | 'number',
-  ruleValueType: 'string' | 'boolean' | 'number' | 'object' | 'function'
+  ruleValueType: 'string' | 'boolean' | 'number' | 'object' | 'function',
+  ruleName: string
 ) {
   if (typeof value !== valueType) {
-    throw Error(`Invalid type ${typeof value} for value in a form field. Should be: ${valueType}.`)
+    throw Error(`Invalid value type ${typeof value} for field with rule ${ruleName}. Should be: ${valueType}.`)
   } else if (typeof ruleValue !== ruleValueType) {
-    throw Error(`Invalid type ${typeof ruleValue} for rule value in a form field. Should be: ${ruleValueType}.`)
+    throw Error(
+      `Invalid rule value type ${typeof ruleValue} for field with rule ${ruleName}. Should be: ${ruleValueType}.`
+    )
   }
 }
 
 export const required: ValidationRuleType<boolean> = (value, ruleValue) => {
-  checkTypes(value, ruleValue, 'string', 'boolean')
+  checkTypes(value, ruleValue, 'string', 'boolean', 'required')
   if (!ruleValue) return null
   return !(value == null || value === '') ? null : ruleValue
 }
 
 export const email: ValidationRuleType<boolean> = (value, ruleValue) => {
-  checkTypes(value, ruleValue, 'string', 'boolean')
+  checkTypes(value, ruleValue, 'string', 'boolean', 'email')
   if (!ruleValue) return null
   return !value || emailRegex.test(value) ? null : ruleValue
 }
 
 export const minLength: ValidationRuleType<number> = (value, ruleValue) => {
-  checkTypes(value, ruleValue, 'string', 'number')
+  checkTypes(value, ruleValue, 'string', 'number', 'minLength')
   if (!ruleValue) return null
   return value.length >= ruleValue ? null : ruleValue
 }
 
 export const maxLength: ValidationRuleType<number> = (value, ruleValue) => {
-  checkTypes(value, ruleValue, 'string', 'number')
+  checkTypes(value, ruleValue, 'string', 'number', 'maxLength')
   if (ruleValue == null) return null
   return value.length <= ruleValue ? null : ruleValue
 }
@@ -51,43 +54,44 @@ const matches: ValidationRuleType<number | string | boolean> = (value, ruleValue
 }
 
 export const booleanMatches: ValidationRuleType<boolean> = (value, ruleValue) => {
-  checkTypes(value, ruleValue, 'boolean', 'boolean')
+  checkTypes(value, ruleValue, 'boolean', 'boolean', 'booleanEquals')
   return value === ruleValue ? null : ruleValue
 }
 
 export const numberMatches: ValidationRuleType<number> = (value, ruleValue) => {
-  checkTypes(value, ruleValue, 'number', 'number')
+  checkTypes(value, ruleValue, 'number', 'number', 'numberEquals')
   return matches(value, ruleValue)
 }
 
 export const stringMatches: ValidationRuleType<string> = (value, ruleValue) => {
-  checkTypes(value, ruleValue, 'string', 'string')
+  checkTypes(value, ruleValue, 'string', 'string', 'stringEquals')
   return matches(value, ruleValue)
 }
 
 export const min: ValidationRuleType<number> = (value, ruleValue) => {
-  checkTypes(value, ruleValue, 'number', 'number')
+  checkTypes(value, ruleValue, 'number', 'number', 'min')
   return value >= ruleValue ? null : ruleValue
 }
 
 export const max: ValidationRuleType<number> = (value, ruleValue) => {
-  checkTypes(value, ruleValue, 'number', 'number')
+  checkTypes(value, ruleValue, 'number', 'number', 'max')
   return value <= ruleValue ? null : ruleValue
 }
 
 export const regExp: ValidationRuleType<RegExp> = (value, ruleValue) => {
-  const pass = value && ruleValue.test(value)
-  if (pass) return null
-  else return ruleValue
+  checkTypes(value, ruleValue, 'string', 'object', 'regExp')
+  return !value || ruleValue.test(value) ? null : ruleValue
 }
 
 export const rule: ValidationRuleType<StringFunctionRule> = (value, ruleValue) => {
+  checkTypes(value, ruleValue, 'string', 'function', 'rule')
   const pass = ruleValue(value)
   if (pass) return null
   else return ruleValue
 }
 
 export const numberRule: ValidationRuleType<NumberFunctionRule> = (value, ruleValue) => {
+  checkTypes(value, ruleValue, 'number', 'function', 'numberRule')
   const pass = ruleValue(value)
   if (pass) return null
   else return ruleValue

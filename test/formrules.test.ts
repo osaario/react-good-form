@@ -7,7 +7,10 @@ import {
   numberMatches,
   stringMatches,
   max,
-  min
+  min,
+  regExp,
+  rule,
+  numberRule
 } from '../src/formrules'
 
 /**
@@ -100,5 +103,20 @@ describe('Form rules tests', () => {
     expect(max(5, 4)).toStrictEqual(4)
     expect(max(5, 0)).toStrictEqual(0)
     expect(() => max('gkeo', 12)).toThrowError()
+  })
+  it('regExp', () => {
+    expect(regExp('ab', /ab/)).toBeNull()
+    expect(regExp('ac', /ab/)).toBeTruthy()
+    expect(() => regExp('gkeo', 'gkeo' as any)).toThrowError()
+  })
+  it('rule', () => {
+    expect(rule('gkow', val => val === 'gkow')).toBeNull()
+    expect(rule('gkow', val => val === 'kow')).toBeTruthy()
+    expect(() => rule('gkeo', 12 as any)).toThrowError()
+  })
+  it('numberRule', () => {
+    expect(numberRule(12, val => val === 12)).toBeNull()
+    expect(numberRule(12, val => val === 1239)).toBeTruthy()
+    expect(() => numberRule('gkeo', 12 as any)).toThrowError()
   })
 })
