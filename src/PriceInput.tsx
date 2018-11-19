@@ -32,6 +32,9 @@ export default class PriceInput extends React.Component<
   state: { stringValue: string } = {
     stringValue: this.props.value !== '' ? centsToAmount(this.props.value as any, this.props.lang || defaultLocale) : ''
   }
+  cents() {
+    return amountToCents(this.state.stringValue)
+  }
   componentDidUpdate(
     prevProps: React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>
   ) {

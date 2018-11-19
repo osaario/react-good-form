@@ -306,9 +306,17 @@ class InputInner extends React.Component<
   }
 }
 
-function getValidationFromRules(rules: any, value: any): BrokenRules {
+function getValidationFromRules(rules: any, pRef: any): BrokenRules {
   // _.keys is untyped!!
   const { ref, ...withoutRef } = rules
+  let value = pRef.current.value
+  if (pRef.current.props && pRef.current.props.type === 'price') {
+    value = pRef.current.cents()
+  } else if (pRef.current.type === 'checkbox') {
+    value = pRef.current.checked
+  } else if (pRef.current.type === 'number') {
+    value = parseInt(pRef.current.value, 10)
+  }
   const validationsForField = Object.keys(withoutRef)
     .map(key => {
       const ruleValue = withoutRef[key]
@@ -343,14 +351,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
     const rules = L.get([lens, 'rules'], this.state.fields)
     if (rules) {
       const ref = L.get([lens, 'ref'], this.state.fields)
-      const invalid = getValidationFromRules(
-        rules,
-        ref.current.type === 'number'
-          ? parseInt(ref.current.value, 10)
-          : ref.current.type === 'checkbox'
-            ? ref.current.checked
-            : ref.current.value
-      )
+      const invalid = getValidationFromRules(rules, ref)
       return Object.keys(invalid).length === 0 ? null : invalid
     }
     return null
@@ -402,7 +403,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
     props: InputProps<T, A, U, S, K, I>
   ) => {
     let rules = pick(props, Object.keys(formRules)) as StringRules
-    if (props.type === 'number') {
+    if (props.type === 'number' || props.type === 'price') {
       rules = pick(props, Object.keys(numberRules)) as any
     } else if (props.type === 'checkbox') {
       rules = pick(props, Object.keys(checkBoxRules)) as any
@@ -559,14 +560,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
           const invalidFieldsLens = L.compose(
             wrappedFields,
             L.when((wv: any) => {
-              const validation = getValidationFromRules(
-                wv.rules,
-                wv.ref.current.type === 'number'
-                  ? parseInt(wv.ref.current.value, 10)
-                  : wv.ref.current.type === 'checkbox'
-                    ? wv.ref.current.checked
-                    : wv.ref.current.value
-              )
+              const validation = getValidationFromRules(wv.rules, wv.ref)
               return wv.rules && Object.keys(validation).length > 0
             })
           )
