@@ -15,7 +15,7 @@ function checkTypes(
 ) {
   if (typeof value !== valueType) {
     throw Error(`Invalid type ${typeof value} for value in a form field. Should be: ${valueType}.`)
-  } else if (typeof value !== valueType) {
+  } else if (typeof ruleValue !== ruleValueType) {
     throw Error(`Invalid type ${typeof ruleValue} for rule value in a form field. Should be: ${ruleValueType}.`)
   }
 }
@@ -51,27 +51,28 @@ const matches: ValidationRuleType<number | string | boolean> = (value, ruleValue
 }
 
 export const booleanMatches: ValidationRuleType<boolean> = (value, ruleValue) => {
-  return matches(value, ruleValue)
+  checkTypes(value, ruleValue, 'boolean', 'boolean')
+  return value === ruleValue ? null : ruleValue
 }
 
 export const numberMatches: ValidationRuleType<number> = (value, ruleValue) => {
+  checkTypes(value, ruleValue, 'number', 'number')
   return matches(value, ruleValue)
 }
 
 export const stringMatches: ValidationRuleType<string> = (value, ruleValue) => {
+  checkTypes(value, ruleValue, 'string', 'string')
   return matches(value, ruleValue)
 }
 
 export const min: ValidationRuleType<number> = (value, ruleValue) => {
-  const pass = value >= ruleValue
-  if (pass) return null
-  else return ruleValue
+  checkTypes(value, ruleValue, 'number', 'number')
+  return value >= ruleValue ? null : ruleValue
 }
 
 export const max: ValidationRuleType<number> = (value, ruleValue) => {
-  const pass = value <= ruleValue
-  if (pass) return null
-  else return ruleValue
+  checkTypes(value, ruleValue, 'number', 'number')
+  return value <= ruleValue ? null : ruleValue
 }
 
 export const regExp: ValidationRuleType<RegExp> = (value, ruleValue) => {

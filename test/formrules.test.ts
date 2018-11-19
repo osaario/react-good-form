@@ -1,4 +1,14 @@
-import { required, email, minLength, maxLength } from '../src/formrules'
+import {
+  required,
+  email,
+  minLength,
+  maxLength,
+  booleanMatches,
+  numberMatches,
+  stringMatches,
+  max,
+  min
+} from '../src/formrules'
 
 /**
  * Dummy test
@@ -58,5 +68,37 @@ describe('Form rules tests', () => {
     expect(() => maxLength(null, 12)).toThrowError()
     expect(() => maxLength(undefined, 0)).toThrowError()
     expect(() => maxLength(12, 12)).toThrowError()
+  })
+  it('booleanMatches', () => {
+    expect(booleanMatches(true, true)).toBeNull()
+    expect(booleanMatches(true, false)).toStrictEqual(false)
+
+    expect(() => maxLength(null, 12)).toThrowError()
+    expect(() => maxLength(undefined, 0)).toThrowError()
+    expect(() => maxLength(12, 12)).toThrowError()
+  })
+  it('numberMatches', () => {
+    expect(numberMatches(5, 5)).toBeNull()
+    expect(numberMatches(5, 6)).toBeTruthy()
+    expect(() => numberMatches('gkeo', 12)).toThrowError()
+  })
+  it('stringMatches', () => {
+    expect(stringMatches('fekkof', 'fekkof')).toBeNull()
+    expect(stringMatches('gkoe', 'good form')).toBeTruthy()
+    expect(() => stringMatches('gkeo', 12 as any)).toThrowError()
+  })
+  it('min', () => {
+    expect(min(1, 0)).toBeNull()
+    expect(min(10, 10)).toBeNull()
+    expect(min(4, 5)).toBeTruthy()
+    expect(min(0, 5)).toBeTruthy()
+    expect(() => min('gkeo', 12)).toThrowError()
+  })
+  it('max', () => {
+    expect(max(0, 1)).toBeNull()
+    expect(max(10, 10)).toBeNull()
+    expect(max(5, 4)).toStrictEqual(4)
+    expect(max(5, 0)).toStrictEqual(0)
+    expect(() => max('gkeo', 12)).toThrowError()
   })
 })
