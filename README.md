@@ -78,10 +78,6 @@ Provide paths to nested structures as arrays.
 </div>
 ```
 
-## Known issues:
-
-At the moment only supports static arrays.
-
 ## Acknowledgements
 
 Library boilerplate starter: https://github.com/alexjoverm/typescript-library-starter
