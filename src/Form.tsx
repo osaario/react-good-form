@@ -1,4 +1,5 @@
 import * as React from 'react'
+import PriceInput from './PriceInput'
 import {
   ValidationRuleType,
   BrokenRule,
@@ -126,7 +127,7 @@ export type TextAreaProps<
     value?: number | string | boolean
   }
 
-export type InputType = 'text' | 'number' | 'checkbox' | 'password' | undefined
+export type InputType = 'text' | 'number' | 'checkbox' | 'password' | 'price' | undefined
 export type InputProps<
   T,
   A extends keyof T,
@@ -290,6 +291,8 @@ class InputInner extends React.Component<
       return <textarea ref={this.ref as any} {...restProps} />
     } else if (this.props._select) {
       return <select ref={this.ref as any} {...restProps} />
+    } else if (this.props.type === 'price') {
+      return <PriceInput ref={this.ref as any} {...restProps} />
     } else {
       return <input ref={this.ref as any} {...restProps} />
     }
