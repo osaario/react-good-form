@@ -136,7 +136,7 @@ export type InputProps<
   K extends keyof T[A][U][S],
   I extends InputType
 > = _.Omit<React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, 'ref'> &
-  (I extends 'number' ? NumberInputRules : I extends 'checkbox' ? CheckboxRules : StringRules) & {
+  (I extends ('number' | 'price') ? NumberInputRules : I extends 'checkbox' ? CheckboxRules : StringRules) & {
     for: LensPathType<T, A, U, S, K>
     value?: number | string | boolean
   } & { type?: I }

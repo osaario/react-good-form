@@ -1,4 +1,5 @@
 import * as React from 'react'
+const defaultLocale = 'en'
 
 function isInvalidPrice(value: string | number | string[] | undefined) {
   if (!value) return false
@@ -8,12 +9,12 @@ function isInvalidPrice(value: string | number | string[] | undefined) {
   return true
 }
 
-function toAmount(sum: number) {
-  return sum.toLocaleString('fi', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+function toAmount(sum: number, lang: string) {
+  return sum.toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-function centsToAmount(sum: number) {
-  return toAmount(sum / 100)
+function centsToAmount(sum: number, lang: string) {
+  return toAmount(sum / 100, lang)
 }
 
 function amountToCents(amount: string) {
@@ -29,7 +30,7 @@ export default class PriceInput extends React.Component<
   { stringValue: string }
 > {
   state: { stringValue: string } = {
-    stringValue: this.props.value !== '' ? centsToAmount(this.props.value as any) : ''
+    stringValue: this.props.value !== '' ? centsToAmount(this.props.value as any, this.props.lang || defaultLocale) : ''
   }
   componentDidUpdate(
     prevProps: React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>
@@ -40,7 +41,7 @@ export default class PriceInput extends React.Component<
           this.props.value !== 0
             ? this.props.value === amountToCents(this.state.stringValue)
               ? this.state.stringValue
-              : centsToAmount(this.props.value as any)
+              : centsToAmount(this.props.value as any, this.props.lang || defaultLocale)
             : this.state.stringValue === '0'
               ? '0'
               : ''
@@ -54,7 +55,7 @@ export default class PriceInput extends React.Component<
         {...this.props}
         type="text"
         value={this.state.stringValue}
-        placeholder={centsToAmount(0)}
+        placeholder={centsToAmount(0, this.props.lang || defaultLocale)}
         onChange={(e: any) => {
           const stringValue = e.target.value
             .split('')
