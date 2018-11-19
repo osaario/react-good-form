@@ -20,6 +20,7 @@ import {
 } from './formrules'
 const L: any = require('partial.lenses')
 import { getIndexesFor, wrappedFields, wrappedTypeName } from './lenshelpers'
+import { findDOMNode } from 'react-dom'
 
 export const formRules = { required, minLength, maxLength, email, regExp, rule, equals: stringMatches }
 export const numberRules = { min, max, rule: numberRule, equals: numberMatches }
@@ -566,7 +567,11 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
           )
           const invalidFields = L.collect(invalidFieldsLens, this.state)
           if (invalidFields.length > 0) {
-            invalidFields[0].ref.current.focus()
+            if (invalidFields[0].ref.current.props && invalidFields[0].ref.current.props.type === 'price') {
+              ;(findDOMNode(invalidFields[0].ref.current) as any).focus()
+            } else {
+              invalidFields[0].ref.current.focus()
+            }
             this.setState(state => {
               return L.set([invalidFieldsLens, 'touched'], true, state)
             })
