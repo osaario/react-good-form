@@ -1,6 +1,6 @@
 {
   "name": "react-good-form",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "Good Form that supports nesting and provides validation",
   "keywords": [
     "react",
@@ -8,6 +8,7 @@
     "validation",
     "validated",
     "nested",
+    "price field",
     "typed"
   ],
   "main": "dist/react-good-form.umd.js",

@@ -53,31 +53,29 @@ export default class PriceInput extends React.Component<
   }
   render() {
     if (this.props.value == null) throw Error('Price field cannot be null or undefined')
+    const splitter = centsToAmount(100, this.props.lang || defaultLocale).indexOf(',') !== -1 ? ',' : '.'
     return (
       <input
         {...this.props}
         type="text"
         value={this.state.stringValue}
-        placeholder={centsToAmount(0, this.props.lang || defaultLocale)}
         onChange={(e: any) => {
           const stringValue = e.target.value
             .split('')
             .filter((letter: string) => {
-              return !isNaN(parseInt(letter, 10)) || letter === ','
+              return !isNaN(parseInt(letter, 10)) || letter === splitter
             })
             .reduce((acc: string, str: string) => {
-              const splitted = acc.split(',')
-              if (acc === '' && str === ',') return acc
-              else if (acc === '0' && str !== ',') return acc
+              const splitted = acc.split(splitter)
+              if (acc === '' && str === splitter) return acc
+              else if (acc === '0' && str !== splitter) return acc
               else if (splitted.length < 2 && str === '0' && acc.length === 1 && acc.endsWith('0')) return acc
-              else if (acc.endsWith(',') && str === ',') return acc
+              else if (acc.endsWith(splitter) && str === splitter) return acc
               else if (splitted.length > 1 && splitted[1].length > 1) return acc
               return acc + str
             }, '')
-          console.log(stringValue)
           const { name, type, checked } = e.target
           const isValid = !isInvalidPrice(stringValue)
-          console.log(isValid, e.target.value)
           if (isValid) {
             this.setState(
               {
