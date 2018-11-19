@@ -267,10 +267,7 @@ export interface FormProps<T>
       pristine: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
         path: LensPathType<T, A, U, S, K>
       ) => boolean
-    },
-    emitScopedChange: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
-      event: FormEventType<T, A, U, S, K>
-    ) => void
+    }
   ) => JSX.Element | null
 }
 
@@ -307,17 +304,9 @@ class InputInner extends React.Component<
   }
 }
 
-function getValidationFromRules(rules: any, pRef: any): BrokenRules {
+function getValidationFromRules(rules: any, value: any): BrokenRules {
   // _.keys is untyped!!
   const { ref, ...withoutRef } = rules
-  let value = pRef.current.value
-  if (pRef.current.props && pRef.current.props.type === 'price') {
-    value = pRef.current.cents()
-  } else if (pRef.current.type === 'checkbox') {
-    value = pRef.current.checked
-  } else if (pRef.current.type === 'number') {
-    value = parseInt(pRef.current.value, 10)
-  }
   const validationsForField = Object.keys(withoutRef)
     .map(key => {
       const ruleValue = withoutRef[key]
@@ -353,8 +342,8 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
     // field not touched
     const rules = L.get([lens, 'rules'], this.state.fields)
     if (rules) {
-      const ref = L.get([lens, 'ref'], this.state.fields)
-      const invalid = getValidationFromRules(rules, ref)
+      const value = L.get([lens], this.props.value)
+      const invalid = getValidationFromRules(rules, value)
       return Object.keys(invalid).length === 0 ? null : invalid
     }
     return null
@@ -491,30 +480,8 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
     event: FormEventType<T, A, U, S, K>
   ) => {
     // a hack to know if these are fed
-    if (typeof event.value === 'object') {
-      const newIndexes = getIndexesFor(event.value)
-      /*
-      const oldIndexes = getIndexesFor(L.get([event.for], this.state.fields))
-      const oneDeepOld = oldIndexes.map((v: any) => v[0]).filter((a: any) => a.length === 1)
-      const oneDeepNew = newIndexes.map((v: any) => v[0]).filter((a: any) => a.length === 1)
-      if (JSON.stringify(oldIndexes.map((v: any) => v[0])) !== JSON.stringify(newIndexes.map((v: any) => v[0]))) {
-        console.error(
-          'Detected a change to datastructure, removing elements or changing array order leads to undefined behaviour'
-        )
-      }*/
-      const value = newIndexes.reduce((acc: any, val: any) => {
-        // remove undefined indices
-        if (val[1] === undefined) {
-          return L.remove([event.for, val[0]], acc)
-        } else {
-          return L.set([event.for, val[0]], val[1], acc)
-        }
-      }, this.props.value)
-      this.props.onChange(value)
-    } else {
-      const value = L.set([event.for], event.value, this.props.value)
-      this.props.onChange(value)
-    }
+    const value = L.set([event.for], event.value, this.props.value)
+    this.props.onChange(value)
   }
   valid = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     path: LensPathType<T, A, U, S, K>
@@ -560,14 +527,20 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
         onSubmit={(e: any) => {
           e.preventDefault()
           e.stopPropagation()
-          const invalidFieldsLens = L.compose(
-            wrappedFields,
-            L.when((wv: any) => {
-              const validation = getValidationFromRules(wv.rules, wv.ref)
-              return wv.rules && Object.keys(validation).length > 0
-            })
-          )
-          const invalidFields = L.collect(invalidFieldsLens, this.state)
+          const indexes = getIndexesFor(this.props.value)
+          const invalidFields = indexes.reduce((acc: any, index: any) => {
+            console.log({ index, acc })
+            const value = index[1]
+            const field = L.get(index[0], this.state.fields)
+            if (!field || !field.rules) {
+              return acc
+            } else {
+              const validation = getValidationFromRules(field.rules, value)
+              if (Object.keys(validation).length > 0) return acc.concat([field])
+              return acc
+            }
+          }, [])
+          console.log({ invalidFields })
           if (invalidFields.length > 0) {
             if (invalidFields[0].ref.current.props && invalidFields[0].ref.current.props.type === 'price') {
               ;(findDOMNode(invalidFields[0].ref.current) as any).focus()
@@ -575,7 +548,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
               invalidFields[0].ref.current.focus()
             }
             this.setState(state => {
-              return L.set([invalidFieldsLens, 'touched'], true, state)
+              return L.set([wrappedFields, 'touched'], true, state)
             })
           } else {
             if (this.props.onSubmit) this.props.onSubmit(e)
@@ -599,8 +572,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
               untouched: this.untouched,
               dirty: this.dirty,
               pristine: this.pristine
-            },
-            this.emitScopedChange
+            }
           )}
         </React.Fragment>
       </form>
