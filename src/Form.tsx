@@ -341,7 +341,9 @@ function getValidationFromRules(rules: any, pRef: any): BrokenRules {
 export interface FormState {
   fields: any
 }
-const omitFromInputs = ['ref', 'for'].concat(Object.keys(formRules)).concat(Object.keys(numberRules))
+const omitFromInputs = ['ref', 'for', 'leftAddon', 'rightAddon']
+  .concat(Object.keys(formRules))
+  .concat(Object.keys(numberRules))
 export class Form<T> extends React.Component<FormProps<T>, FormState> {
   state: FormState = {
     // no pricings yet registered so lets just cast this

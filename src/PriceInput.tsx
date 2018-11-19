@@ -1,13 +1,14 @@
 import * as React from 'react'
 const defaultLocale = 'en'
 
+/*
 function isInvalidPrice(value: string | number | string[] | undefined) {
   if (!value) return false
   if (typeof value !== 'string') throw Error('Value not a string in price field')
   const priceRegex = /^(0{1}|[1-9]{1}[0-9]*)(\s[0-9]{3})*((\.|\,)[0-9]{1,2})?$/
   if (value.match(priceRegex)) return false
   return true
-}
+}*/
 
 function toAmount(sum: number, lang: string) {
   return sum.toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -38,6 +39,7 @@ export default class PriceInput extends React.Component<
   componentDidUpdate(
     prevProps: React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>
   ) {
+    const splitter = centsToAmount(100, this.props.lang || defaultLocale).indexOf(',') !== -1 ? ',' : '.'
     if (prevProps.value !== this.props.value) {
       this.setState({
         stringValue:
@@ -45,7 +47,7 @@ export default class PriceInput extends React.Component<
             ? this.props.value === amountToCents(this.state.stringValue)
               ? this.state.stringValue
               : centsToAmount(this.props.value as any, this.props.lang || defaultLocale)
-            : this.state.stringValue === '0'
+            : this.state.stringValue === '0' || this.state.stringValue === '0' + splitter
               ? '0'
               : ''
       })
@@ -75,28 +77,23 @@ export default class PriceInput extends React.Component<
               return acc + str
             }, '')
           const { name, type, checked } = e.target
-          const isValid = !isInvalidPrice(stringValue)
-          if (isValid) {
-            this.setState(
-              {
-                stringValue
-              },
-              () => {
-                if (this.props.onChange) {
-                  this.props.onChange({
-                    target: {
-                      name,
-                      type,
-                      checked,
-                      value: stringValue === '' ? 0 : amountToCents(stringValue)
-                    }
-                  } as any)
-                }
+          this.setState(
+            {
+              stringValue
+            },
+            () => {
+              if (this.props.onChange) {
+                this.props.onChange({
+                  target: {
+                    name,
+                    type,
+                    checked,
+                    value: stringValue === '' ? 0 : amountToCents(stringValue)
+                  }
+                } as any)
               }
-            )
-          } else {
-            this.setState({ stringValue })
-          }
+            }
+          )
         }}
       />
     )
