@@ -1,4 +1,4 @@
-[![Stable Release](https://img.shields.io/npm/v/react-good-form.svg)](https://npm.im/formik)
+[![Stable Release](https://img.shields.io/npm/v/react-good-form.svg)](https://npm.im/react-good-form)
 [![license](https://badgen.now.sh/badge/license/MIT)](./LICENSE)
 [![TypeScript](https://badges.frapsoft.com/typescript/code/typescript.svg?v=101)](https://github.com/ellerbrock/typescript-badges/)
 
