@@ -1,3 +1,6 @@
+[![Stable Release](https://img.shields.io/npm/v/react-good-form.svg)](https://npm.im/formik)
+[![license](https://badgen.now.sh/badge/license/MIT)](./LICENSE)
+
 # React Good Form
 
 React form with validation. Supports nested structures with objects and arrays.
@@ -57,6 +60,7 @@ You can create arbitary rules by providing a rule function.
   for="email"
 />
 ```
+
 Or an regular expression.
 
 ```JSX
