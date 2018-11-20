@@ -1,15 +1,6 @@
 import * as React from 'react'
 const defaultLocale = 'en'
 
-/*
-function isInvalidPrice(value: string | number | string[] | undefined) {
-  if (!value) return false
-  if (typeof value !== 'string') throw Error('Value not a string in price field')
-  const priceRegex = /^(0{1}|[1-9]{1}[0-9]*)(\s[0-9]{3})*((\.|\,)[0-9]{1,2})?$/
-  if (value.match(priceRegex)) return false
-  return true
-}*/
-
 function toAmount(sum: number, lang: string) {
   return sum.toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
