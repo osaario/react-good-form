@@ -336,11 +336,9 @@ const omitFromInputs = ['ref', 'for', 'leftAddon', 'rightAddon']
   .concat(Object.keys(numberRules))
 export class Form<T> extends React.Component<FormProps<T>, FormState> {
   state: FormState = {
-    // no pricings yet registered so lets just cast this
     fields: {}
   }
   getValidationForField(lens: any) {
-    // field not touched
     const rules = L.get([lens, 'rules'], this.state.fields)
     if (rules) {
       const value = L.get([lens], this.props.value)
@@ -485,11 +483,9 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
   emitChange = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     event: FormEventType<T, A, U, S, K>
   ) => {
-    // a hack to know if these are fed
     if (typeof event.value === 'object') {
       const newIndexes = getIndexesFor(event.value)
       const value = newIndexes.reduce((acc: any, val: any) => {
-        // remove undefined indices
         if (val[1] === undefined) {
           return L.remove([event.for, val[0]], acc)
         } else {
