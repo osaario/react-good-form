@@ -32,6 +32,7 @@ describe('Form rules tests', () => {
   })
   it('email', () => {
     expect(email('', true)).toBeNull()
+    expect(email('', false)).toBeNull()
     expect(email('tauno@gmail.com', true)).toBeNull()
     expect(email('tauno@gmail.fi', true)).toBeNull()
     expect(email('antto@mail.fi', true)).toBeNull()
