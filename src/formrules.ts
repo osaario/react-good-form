@@ -1,8 +1,8 @@
-export type StringFunctionRule = (value: string) => boolean
-export type NumberFunctionRule = (value: number) => boolean
-export type ValidationRuleType<
-  T extends string | number | boolean | RegExp | StringFunctionRule | NumberFunctionRule
-> = (value: any, ruleValue: T) => BrokenRule | null
+export type FunctionRule = (value: string | number) => boolean
+export type ValidationRuleType<T extends string | number | boolean | RegExp | FunctionRule> = (
+  value: any,
+  ruleValue: T
+) => BrokenRule | null
 // https://emailregex.com/
 const emailRegex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
 //
@@ -82,21 +82,18 @@ export const regExp: ValidationRuleType<RegExp> = (value, ruleValue) => {
   return !value || ruleValue.test(value) ? null : ruleValue
 }
 
-export const rule: ValidationRuleType<StringFunctionRule> = (value, ruleValue) => {
-  checkTypes(value, ruleValue, 'string', 'function', 'rule')
+export const rule: ValidationRuleType<FunctionRule> = (value, ruleValue) => {
+  if (typeof value === 'number') {
+    checkTypes(value, ruleValue, 'number', 'function', 'rule')
+  } else {
+    checkTypes(value, ruleValue, 'string', 'function', 'rule')
+  }
   const pass = ruleValue(value)
   if (pass) return null
   else return ruleValue
 }
 
-export const numberRule: ValidationRuleType<NumberFunctionRule> = (value, ruleValue) => {
-  checkTypes(value, ruleValue, 'number', 'function', 'numberRule')
-  const pass = ruleValue(value)
-  if (pass) return null
-  else return ruleValue
-}
-
-export type BrokenRule = string | number | boolean | RegExp | StringFunctionRule | NumberFunctionRule
+export type BrokenRule = string | number | boolean | RegExp | FunctionRule
 
 /*
 5

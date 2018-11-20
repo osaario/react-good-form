@@ -9,8 +9,7 @@ import {
   max,
   min,
   regExp,
-  rule,
-  numberRule
+  rule
 } from '../src/formrules'
 
 /**
@@ -112,12 +111,8 @@ describe('Form rules tests', () => {
   })
   it('rule', () => {
     expect(rule('gkow', val => val === 'gkow')).toBeNull()
+    expect(rule(12, val => val === 12)).toBeNull()
     expect(rule('gkow', val => val === 'kow')).toBeTruthy()
     expect(() => rule('gkeo', 12 as any)).toThrowError()
-  })
-  it('numberRule', () => {
-    expect(numberRule(12, val => val === 12)).toBeNull()
-    expect(numberRule(12, val => val === 1239)).toBeTruthy()
-    expect(() => numberRule('gkeo', 12 as any)).toThrowError()
   })
 })

@@ -11,19 +11,17 @@ import {
   stringMatches,
   numberMatches,
   booleanMatches,
-  numberRule,
   rule,
   email,
   regExp,
-  StringFunctionRule,
-  NumberFunctionRule
+  FunctionRule
 } from './formrules'
 const L: any = require('partial.lenses')
 import { getIndexesFor, wrappedFields, wrappedTypeName } from './lenshelpers'
 import { findDOMNode } from 'react-dom'
 
 export const formRules = { required, minLength, maxLength, email, regExp, rule, equals: stringMatches }
-export const numberRules = { min, max, rule: numberRule, equals: numberMatches }
+export const numberRules = { min, max, rule, equals: numberMatches }
 export const checkBoxRules = { equals: booleanMatches }
 
 const omit = (obj: any, properties: string[]) => {
@@ -69,7 +67,7 @@ type StringRules = {
       ? number
       : (typeof formRules)[P] extends ValidationRuleType<string>
         ? string
-        : (typeof formRules)[P] extends ValidationRuleType<RegExp> ? RegExp : StringFunctionRule
+        : (typeof formRules)[P] extends ValidationRuleType<RegExp> ? RegExp : FunctionRule
 }
 
 type NumberInputRules = {
@@ -79,7 +77,7 @@ type NumberInputRules = {
       ? number
       : (typeof numberRules)[P] extends ValidationRuleType<string>
         ? string
-        : (typeof numberRules)[P] extends ValidationRuleType<RegExp> ? RegExp : NumberFunctionRule
+        : (typeof numberRules)[P] extends ValidationRuleType<RegExp> ? RegExp : FunctionRule
 }
 
 type CheckboxRules = {
@@ -89,7 +87,7 @@ type CheckboxRules = {
       ? number
       : (typeof checkBoxRules)[P] extends ValidationRuleType<string>
         ? string
-        : (typeof checkBoxRules)[P] extends ValidationRuleType<RegExp> ? RegExp : NumberFunctionRule
+        : (typeof checkBoxRules)[P] extends ValidationRuleType<RegExp> ? RegExp : FunctionRule
 }
 
 export type BrokenRules = { [K in keyof typeof formRules]?: BrokenRule } &
@@ -125,7 +123,7 @@ export type TextAreaProps<
 > = _.Omit<React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>, 'ref'> &
   StringRules & {
     for: LensPathType<T, A, U, S, K>
-    value?: number | string | boolean
+    value?: never
   }
 
 export type InputType = 'text' | 'number' | 'checkbox' | 'password' | 'price' | undefined
@@ -139,7 +137,7 @@ export type InputProps<
 > = _.Omit<React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, 'ref'> &
   (I extends ('number' | 'price') ? NumberInputRules : I extends 'checkbox' ? CheckboxRules : StringRules) & {
     for: LensPathType<T, A, U, S, K>
-    value?: number | string | boolean
+    value?: never
   } & { type?: I }
 
 export type SelectProps<
@@ -150,7 +148,7 @@ export type SelectProps<
   K extends keyof T[A][U][S]
 > = _.Omit<React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>, 'ref'> & {
   for: LensPathType<T, A, U, S, K>
-  value?: string
+  value?: never
 }
 
 type FormGroupAddons = {
@@ -267,7 +265,10 @@ export interface FormProps<T>
       pristine: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
         path: LensPathType<T, A, U, S, K>
       ) => boolean
-    }
+    },
+    emitChange: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+      event: FormEventType<T, A, U, S, K>
+    ) => void
   ) => JSX.Element | null
 }
 
@@ -403,8 +404,13 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
     const lensPath = props.for
     const value = L.get([lensPath], this.props.value)
     const prevValidation = L.get([lensPath], this.state.fields)
-    if (value === null && props.value == null)
-      throw Error('Input needs to have value in Form state or provided one in props')
+    if (value == null)
+      throw Error(
+        `Input for ${props.for} has no value provided. Please provide a value in the Form props that has a value for ${
+          props.for
+        }.`
+      )
+    if (props.value != null) throw Error(`Don't provide a value as a prop for individual input field.`)
     return (
       <InputInner
         onChange={(e: any) => {
@@ -422,12 +428,12 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
                   ? e.target.checked
                   : e.target.value
           }
-          this.emitScopedChange(event as any)
+          this.emitChange(event as any)
         }}
         _textArea={(props as any)._textArea}
         _select={(props as any)._select}
         {...omit(props, omitFromInputs)}
-        value={value == null ? props.value : value}
+        value={value}
         checked={!!value}
         key={JSON.stringify(rules) + JSON.stringify(props.for)}
         onDidMount={ref => {
@@ -476,48 +482,55 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
       />
     )
   }
-  emitScopedChange = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+  emitChange = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     event: FormEventType<T, A, U, S, K>
   ) => {
     // a hack to know if these are fed
-    const value = L.set([event.for], event.value, this.props.value)
-    this.props.onChange(value)
+    if (typeof event.value === 'object') {
+      const newIndexes = getIndexesFor(event.value)
+      const value = newIndexes.reduce((acc: any, val: any) => {
+        // remove undefined indices
+        if (val[1] === undefined) {
+          return L.remove([event.for, val[0]], acc)
+        } else {
+          return L.set([event.for, val[0]], val[1], acc)
+        }
+      }, this.props.value)
+      this.props.onChange(value)
+    } else {
+      const value = L.set([event.for], event.value, this.props.value)
+      this.props.onChange(value)
+    }
   }
   valid = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     path: LensPathType<T, A, U, S, K>
   ) => {
     return !this.getValidationForField(path)
-    // a hack to know if these are fed
   }
   invalid = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     path: LensPathType<T, A, U, S, K>
   ) => {
     return this.getValidationForField(path)
-    // a hack to know if these are fed
   }
   touched = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     path: LensPathType<T, A, U, S, K>
   ) => {
     return L.get([path, 'touched'], this.state.fields)
-    // a hack to know if these are fed
   }
   untouched = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     path: LensPathType<T, A, U, S, K>
   ) => {
     return !this.touched(path)
-    // a hack to know if these are fed
   }
   dirty = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     path: LensPathType<T, A, U, S, K>
   ) => {
     return L.get([path, 'dirty'], this.state.fields)
-    // a hack to know if these are fed
   }
   pristine = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     path: LensPathType<T, A, U, S, K>
   ) => {
     return !this.dirty(path)
-    // a hack to know if these are fed
   }
   render() {
     const props = omit(this.props, ['value', 'onChange'])
@@ -570,7 +583,8 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
               untouched: this.untouched,
               dirty: this.dirty,
               pristine: this.pristine
-            }
+            },
+            this.emitChange
           )}
         </React.Fragment>
       </form>
