@@ -1,9 +1,10 @@
 [![Stable Release](https://img.shields.io/npm/v/react-good-form.svg)](https://npm.im/formik)
 [![license](https://badgen.now.sh/badge/license/MIT)](./LICENSE)
+[![TypeScript](https://badges.frapsoft.com/typescript/code/typescript.svg?v=101)](https://github.com/ellerbrock/typescript-badges/)
 
 # React Good Form
 
-React form with validation. Supports nested structures with objects and arrays.
+Good Form implementation for React. Easy drop-in validation. Supports arrays and nested structures. Helps to reduce boilerplate without being opinionated on style. Typescript support.
 
 ## Installation
 
@@ -81,9 +82,3 @@ Provide paths to nested structures as arrays.
   <Input for={["address", "street"]} minLength={5} maxLength={100} />
 </div>
 ```
-
-## Acknowledgements
-
-Library boilerplate starter: https://github.com/alexjoverm/typescript-library-starter
-
-## Dependencies
