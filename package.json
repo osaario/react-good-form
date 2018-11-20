@@ -1,6 +1,6 @@
 {
   "name": "react-good-form",
-  "version": "0.0.0-development",
+  "version": "0.1.1",
   "description": "Good Form that supports nesting and provides validation",
   "keywords": [
     "react",
@@ -33,7 +33,7 @@
     "start": "rollup -c rollup.config.ts -w",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:prod": "npm run lint && npm run test -- --coverage --no-cache",
+    "test:prod": "npm run lint && npm run test -- --no-cache",
     "deploy-docs": "ts-node tools/gh-pages-publish",
     "report-coverage": "cat ./coverage/lcov.info | coveralls",
     "commit": "git-cz",
