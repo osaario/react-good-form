@@ -82,3 +82,7 @@ Provide paths to nested structures as arrays.
   <Input for={["address", "street"]} minLength={5} maxLength={100} />
 </div>
 ```
+
+## Documentation
+
+https://osaario.github.io/react-good-form/
