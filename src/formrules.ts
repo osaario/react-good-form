@@ -50,25 +50,24 @@ export const maxLength: ValidationRuleType<number> = (value, ruleValue) => {
   return (value as string).length <= ruleValue ? null : ruleValue
 }
 
-const matches: ValidationRuleType<number | string | boolean> = (value, ruleValue) => {
-  const pass = value === ruleValue
-  if (pass) return null
-  else return ruleValue
+export const strictly: ValidationRuleType<boolean> = (value, ruleValue) => {
+  checkTypes(value, ruleValue, 'boolean', 'boolean', 'booleanEquals')
+  return value === ruleValue ? null : ruleValue
 }
 
-export const booleanMatches: ValidationRuleType<boolean> = (value, ruleValue) => {
+export const loosely: ValidationRuleType<boolean> = (value, ruleValue) => {
   checkTypes(value, ruleValue, 'boolean', 'boolean', 'booleanEquals')
   return !!value === !!ruleValue ? null : ruleValue
 }
 
-export const numberMatches: ValidationRuleType<number> = (value, ruleValue) => {
+export const equals: ValidationRuleType<number> = (value, ruleValue) => {
   checkTypes(value, ruleValue, 'number', 'number', 'numberEquals')
-  return matches(value, ruleValue)
+  return value === ruleValue ? null : ruleValue
 }
 
-export const stringMatches: ValidationRuleType<string> = (value, ruleValue) => {
+export const matches: ValidationRuleType<string> = (value, ruleValue) => {
   checkTypes(value, ruleValue, 'string', 'string', 'stringEquals')
-  return matches(value, ruleValue)
+  return value === ruleValue ? null : ruleValue
 }
 
 export const min: ValidationRuleType<number> = (value, ruleValue) => {

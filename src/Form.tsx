@@ -8,9 +8,10 @@ import {
   min,
   max,
   maxLength,
-  stringMatches,
-  numberMatches,
-  booleanMatches,
+  matches,
+  equals,
+  loosely,
+  strictly,
   rule,
   email,
   regExp,
@@ -19,12 +20,12 @@ import {
   NumberFunctionRule
 } from './formrules'
 const L: any = require('partial.lenses')
-import { getIndexesFor, wrappedFields, wrappedTypeName } from './lenshelpers'
+import { getIndexesFor, wrappedFields, wrappedTypeName, getFieldIndexesFor } from './lenshelpers'
 import { findDOMNode } from 'react-dom'
 
-export const formRules = { required, minLength, maxLength, email, regExp, rule, equals: stringMatches }
-export const numberRules = { min, max, rule: numberRule, equals: numberMatches }
-export const checkBoxRules = { equals: booleanMatches }
+export const formRules = { required, minLength, maxLength, email, regExp, rule, matches }
+export const numberRules = { min, max, numberRule, equals }
+export const checkBoxRules = { loosely, strictly }
 
 const omit = (obj: any, properties: string[]) => {
   const lookup: any = properties.reduce((acc, key) => {
@@ -336,6 +337,8 @@ export interface FormState {
 const omitFromInputs = ['ref', 'for', 'leftAddon', 'rightAddon']
   .concat(Object.keys(formRules))
   .concat(Object.keys(numberRules))
+  .concat(Object.keys(checkBoxRules))
+
 export class Form<T> extends React.Component<FormProps<T>, FormState> {
   state: FormState = {
     fields: {}
@@ -417,7 +420,9 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
             for: props.for,
             value:
               e.target.type === 'number'
-                ? parseInt(e.target.value, 10)
+                ? e.target.value === ''
+                  ? null
+                  : parseInt(e.target.value, 10)
                 : e.target.type === 'checkbox'
                   ? e.target.checked
                   : e.target.value
@@ -479,7 +484,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
   emitChange = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     event: FormEventType<T, A, U, S, K>
   ) => {
-    if (typeof event.value === 'object') {
+    if (event.value != null && typeof event.value === 'object') {
       const newIndexes = getIndexesFor(event.value)
       const value = newIndexes.reduce((acc: any, val: any) => {
         if (val[1] === undefined) {
@@ -532,10 +537,12 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
         onSubmit={(e: any) => {
           e.preventDefault()
           e.stopPropagation()
-          const indexes = getIndexesFor(this.props.value)
+          const indexes = getFieldIndexesFor(this.state.fields)
+          console.log({ indexes })
           const invalidFields = indexes.reduce((acc: any, index: any) => {
-            const value = index[1]
-            const field = L.get(index[0], this.state.fields)
+            const field = index[1]
+            const value = L.get(index[0], this.props.value)
+            console.log({ field, value })
             if (!field || !field.rules) {
               return acc
             } else {
@@ -544,6 +551,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
               return acc
             }
           }, [])
+          console.log({ invalidFields })
           if (invalidFields.length > 0) {
             if (invalidFields[0].ref.current.props && invalidFields[0].ref.current.props.type === 'price') {
               ;(findDOMNode(invalidFields[0].ref.current) as any).focus()

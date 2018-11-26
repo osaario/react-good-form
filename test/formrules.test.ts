@@ -3,14 +3,15 @@ import {
   email,
   minLength,
   maxLength,
-  booleanMatches,
-  numberMatches,
-  stringMatches,
+  loosely,
+  equals,
+  matches,
   max,
   min,
   regExp,
   rule,
-  numberRule
+  numberRule,
+  strictly
 } from '../src/formrules'
 
 /**
@@ -74,23 +75,33 @@ describe('Form rules tests', () => {
     expect(maxLength(undefined, 0)).toBeNull()
     expect(() => maxLength(12, 12)).toThrowError()
   })
-  it('booleanMatches', () => {
-    expect(booleanMatches(true, true)).toBeNull()
-    expect(booleanMatches(true, false)).toStrictEqual(false)
+  it('loosely', () => {
+    expect(loosely(true, true)).toBeNull()
+    expect(loosely(true, false)).toStrictEqual(false)
 
-    expect(booleanMatches(null, false)).toBeNull()
-    expect(booleanMatches(undefined, false)).toBeNull()
-    expect(() => maxLength(12, 12)).toThrowError()
+    expect(loosely(null, false)).toBeNull()
+    expect(loosely(undefined, false)).toBeNull()
+    expect(() => loosely(true, 12 as any)).toThrowError()
+    expect(() => loosely(null, 12 as any)).toThrowError()
+  })
+  it('strictly', () => {
+    expect(strictly(true, true)).toBeNull()
+    expect(strictly(true, false)).toStrictEqual(false)
+
+    expect(strictly(null, false)).toStrictEqual(false)
+    expect(strictly(undefined, false)).toStrictEqual(false)
+    expect(() => strictly(true, 12 as any)).toThrowError()
+    expect(() => strictly(null, 12 as any)).toThrowError()
   })
   it('numberMatches', () => {
-    expect(numberMatches(5, 5)).toBeNull()
-    expect(numberMatches(5, 6)).toBeTruthy()
-    expect(() => numberMatches('gkeo', 12)).toThrowError()
+    expect(equals(5, 5)).toBeNull()
+    expect(equals(5, 6)).toBeTruthy()
+    expect(() => equals('gkeo', 12)).toThrowError()
   })
   it('stringMatches', () => {
-    expect(stringMatches('fekkof', 'fekkof')).toBeNull()
-    expect(stringMatches('gkoe', 'good form')).toBeTruthy()
-    expect(() => stringMatches('gkeo', 12 as any)).toThrowError()
+    expect(matches('fekkof', 'fekkof')).toBeNull()
+    expect(matches('gkoe', 'good form')).toBeTruthy()
+    expect(() => matches('gkeo', 12 as any)).toThrowError()
   })
   it('min', () => {
     expect(min(1, 0)).toBeNull()

@@ -23,3 +23,11 @@ export function getIndexesFor(val: any) {
     val
   )
 }
+
+export function getFieldIndexesFor(val: any) {
+  return L.collectAs(
+    (value: any, path: any) => [L.collect(L.flatten, path), value],
+    L.lazy((rec: any) => L.ifElse(isWrappedValue, [], [L.joinIx(L.children), rec])),
+    val
+  )
+}
