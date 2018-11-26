@@ -9,7 +9,8 @@ import {
   max,
   min,
   regExp,
-  rule
+  rule,
+  numberRule
 } from '../src/formrules'
 
 /**
@@ -24,8 +25,8 @@ describe('Form rules tests', () => {
     expect(required('gagaeg', true)).toBeNull()
 
     expect(() => required(1, true)).toThrow()
-    expect(() => required(undefined, true)).toThrow()
-    expect(() => required(null, true)).toThrow()
+    expect(required(undefined, true)).toEqual(true)
+    expect(required(null, true)).toEqual(true)
     expect(() => required(null, 12 as any)).toThrow()
     expect(() => required(null, 'string' as any)).toThrow()
   })
@@ -40,10 +41,11 @@ describe('Form rules tests', () => {
     expect(email('tauno@gmail', true)).toBeTruthy()
     expect(email('fef', true)).toBeTruthy()
 
-    expect(() => email(null, true)).toThrowError()
+    expect(email(null, true)).toBeNull()
+
     expect(() => email(12, true)).toThrowError()
-    expect(() => email(undefined, true)).toThrowError()
-    expect(() => email({}, true)).toThrowError()
+    expect(email(undefined, true)).toBeNull()
+    expect(() => email({} as any, true)).toThrowError()
   })
   it('minLength', () => {
     expect(minLength('1', 1)).toBeNull()
@@ -55,8 +57,8 @@ describe('Form rules tests', () => {
     expect(minLength('1212', 5)).toBeTruthy()
     expect(minLength('10420042024042', 100)).toBeTruthy()
 
-    expect(() => minLength(null, 12)).toThrowError()
-    expect(() => minLength(undefined, 0)).toThrowError()
+    expect(minLength(null, 12)).toEqual(12)
+    expect(minLength(undefined, 0)).toBeNull()
     expect(() => minLength(12, 12)).toThrowError()
   })
   it('maxLength', () => {
@@ -68,16 +70,16 @@ describe('Form rules tests', () => {
     expect(maxLength('1212342', 5)).toBeTruthy()
     expect(maxLength('10420042024042', 10)).toBeTruthy()
 
-    expect(() => maxLength(null, 12)).toThrowError()
-    expect(() => maxLength(undefined, 0)).toThrowError()
+    expect(maxLength(null, 12)).toBeNull()
+    expect(maxLength(undefined, 0)).toBeNull()
     expect(() => maxLength(12, 12)).toThrowError()
   })
   it('booleanMatches', () => {
     expect(booleanMatches(true, true)).toBeNull()
     expect(booleanMatches(true, false)).toStrictEqual(false)
 
-    expect(() => maxLength(null, 12)).toThrowError()
-    expect(() => maxLength(undefined, 0)).toThrowError()
+    expect(booleanMatches(null, false)).toBeNull()
+    expect(booleanMatches(undefined, false)).toBeNull()
     expect(() => maxLength(12, 12)).toThrowError()
   })
   it('numberMatches', () => {
@@ -111,8 +113,11 @@ describe('Form rules tests', () => {
   })
   it('rule', () => {
     expect(rule('gkow', val => val === 'gkow')).toBeNull()
-    expect(rule(12, val => val === 12)).toBeNull()
     expect(rule('gkow', val => val === 'kow')).toBeTruthy()
+    expect(() => rule('gkeo', 12 as any)).toThrowError()
+  })
+  it('numberRule', () => {
+    expect(numberRule(12, val => val === 12)).toBeNull()
     expect(() => rule('gkeo', 12 as any)).toThrowError()
   })
 })

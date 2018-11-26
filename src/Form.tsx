@@ -14,14 +14,16 @@ import {
   rule,
   email,
   regExp,
-  FunctionRule
+  FunctionRule,
+  numberRule,
+  NumberFunctionRule
 } from './formrules'
 const L: any = require('partial.lenses')
 import { getIndexesFor, wrappedFields, wrappedTypeName } from './lenshelpers'
 import { findDOMNode } from 'react-dom'
 
 export const formRules = { required, minLength, maxLength, email, regExp, rule, equals: stringMatches }
-export const numberRules = { min, max, rule, equals: numberMatches }
+export const numberRules = { min, max, rule: numberRule, equals: numberMatches }
 export const checkBoxRules = { equals: booleanMatches }
 
 const omit = (obj: any, properties: string[]) => {
@@ -77,7 +79,7 @@ type NumberInputRules = {
       ? number
       : (typeof numberRules)[P] extends ValidationRuleType<string>
         ? string
-        : (typeof numberRules)[P] extends ValidationRuleType<RegExp> ? RegExp : FunctionRule
+        : (typeof numberRules)[P] extends ValidationRuleType<RegExp> ? RegExp : NumberFunctionRule
 }
 
 type CheckboxRules = {
@@ -402,12 +404,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
     const lensPath = props.for
     const value = L.get([lensPath], this.props.value)
     const prevValidation = L.get([lensPath], this.state.fields)
-    if (value == null)
-      throw Error(
-        `Input for ${props.for} has no value provided. Please provide a value in the Form props that has a value for ${
-          props.for
-        }.`
-      )
     if (props.value != null) throw Error(`Don't provide a value as a prop for individual input field.`)
     return (
       <InputInner
@@ -431,7 +427,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
         _textArea={(props as any)._textArea}
         _select={(props as any)._select}
         {...omit(props, omitFromInputs)}
-        value={value}
+        value={value == null ? '' : value}
         checked={!!value}
         key={JSON.stringify(rules) + JSON.stringify(props.for)}
         onDidMount={ref => {

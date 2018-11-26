@@ -1,6 +1,7 @@
-export type FunctionRule = (value: string | number) => boolean
-export type ValidationRuleType<T extends string | number | boolean | RegExp | FunctionRule> = (
-  value: any,
+export type FunctionRule = (value: string | null | undefined) => boolean
+export type NumberFunctionRule = (value: number | null | undefined) => boolean
+export type ValidationRuleType<T extends string | number | boolean | RegExp | FunctionRule | NumberFunctionRule> = (
+  value: number | string | boolean | null | undefined,
   ruleValue: T
 ) => BrokenRule | null
 // https://emailregex.com/
@@ -14,12 +15,13 @@ function checkTypes(
   ruleValueType: 'string' | 'boolean' | 'number' | 'object' | 'function',
   ruleName: string
 ) {
-  if (typeof value !== valueType) {
-    throw Error(`Invalid value type ${typeof value} for field with rule ${ruleName}. Should be: ${valueType}.`)
-  } else if (typeof ruleValue !== ruleValueType) {
+  if (typeof ruleValue !== ruleValueType) {
     throw Error(
       `Invalid rule value type ${typeof ruleValue} for field with rule ${ruleName}. Should be: ${ruleValueType}.`
     )
+  } else if (value == null) return
+  else if (typeof value !== valueType) {
+    throw Error(`Invalid value type ${typeof value} for field with rule ${ruleName}. Should be: ${valueType}.`)
   }
 }
 
@@ -32,18 +34,20 @@ export const required: ValidationRuleType<boolean> = (value, ruleValue) => {
 export const email: ValidationRuleType<boolean> = (value, ruleValue) => {
   checkTypes(value, ruleValue, 'string', 'boolean', 'email')
   if (!ruleValue) return null
-  return !value || emailRegex.test(value) ? null : ruleValue
+  return !value || emailRegex.test(value as string) ? null : ruleValue
 }
 
 export const minLength: ValidationRuleType<number> = (value, ruleValue) => {
   checkTypes(value, ruleValue, 'string', 'number', 'minLength')
   if (!ruleValue) return null
-  return value.length >= ruleValue ? null : ruleValue
+  if (value == null) return ruleValue
+  return (value as string).length >= ruleValue ? null : ruleValue
 }
 
 export const maxLength: ValidationRuleType<number> = (value, ruleValue) => {
   checkTypes(value, ruleValue, 'string', 'number', 'maxLength')
-  return value.length <= ruleValue ? null : ruleValue
+  if (value == null) return null
+  return (value as string).length <= ruleValue ? null : ruleValue
 }
 
 const matches: ValidationRuleType<number | string | boolean> = (value, ruleValue) => {
@@ -54,7 +58,7 @@ const matches: ValidationRuleType<number | string | boolean> = (value, ruleValue
 
 export const booleanMatches: ValidationRuleType<boolean> = (value, ruleValue) => {
   checkTypes(value, ruleValue, 'boolean', 'boolean', 'booleanEquals')
-  return value === ruleValue ? null : ruleValue
+  return !!value === !!ruleValue ? null : ruleValue
 }
 
 export const numberMatches: ValidationRuleType<number> = (value, ruleValue) => {
@@ -69,31 +73,36 @@ export const stringMatches: ValidationRuleType<string> = (value, ruleValue) => {
 
 export const min: ValidationRuleType<number> = (value, ruleValue) => {
   checkTypes(value, ruleValue, 'number', 'number', 'min')
+  if (value == null) return !!value === !!ruleValue ? null : ruleValue
   return value >= ruleValue ? null : ruleValue
 }
 
 export const max: ValidationRuleType<number> = (value, ruleValue) => {
   checkTypes(value, ruleValue, 'number', 'number', 'max')
+  if (value == null) return ruleValue
   return value <= ruleValue ? null : ruleValue
 }
 
 export const regExp: ValidationRuleType<RegExp> = (value, ruleValue) => {
   checkTypes(value, ruleValue, 'string', 'object', 'regExp')
-  return !value || ruleValue.test(value) ? null : ruleValue
+  return !value || ruleValue.test(value as string) ? null : ruleValue
 }
 
 export const rule: ValidationRuleType<FunctionRule> = (value, ruleValue) => {
-  if (typeof value === 'number') {
-    checkTypes(value, ruleValue, 'number', 'function', 'rule')
-  } else {
-    checkTypes(value, ruleValue, 'string', 'function', 'rule')
-  }
-  const pass = ruleValue(value)
+  checkTypes(value, ruleValue, 'string', 'function', 'rule')
+  const pass = ruleValue(value as string | null | undefined)
   if (pass) return null
   else return ruleValue
 }
 
-export type BrokenRule = string | number | boolean | RegExp | FunctionRule
+export const numberRule: ValidationRuleType<NumberFunctionRule> = (value, ruleValue) => {
+  checkTypes(value, ruleValue, 'number', 'function', 'rule')
+  const pass = ruleValue(value as number | null | undefined)
+  if (pass) return null
+  else return ruleValue
+}
+
+export type BrokenRule = string | number | boolean | RegExp | FunctionRule | NumberFunctionRule
 
 /*
 5
