@@ -65,6 +65,11 @@ export const equals: ValidationRuleType<number> = (value, ruleValue) => {
   return value === ruleValue ? null : ruleValue
 }
 
+export const ban: ValidationRuleType<string> = (value, ruleValue) => {
+  checkTypes(value, ruleValue, 'string', 'string', 'stringEquals')
+  return value !== ruleValue ? null : ruleValue
+}
+
 export const matches: ValidationRuleType<string> = (value, ruleValue) => {
   checkTypes(value, ruleValue, 'string', 'string', 'stringEquals')
   return value === ruleValue ? null : ruleValue

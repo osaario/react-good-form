@@ -11,6 +11,7 @@ import {
   matches,
   equals,
   loosely,
+  ban,
   strictly,
   rule,
   email,
@@ -23,7 +24,7 @@ const L: any = require('partial.lenses')
 import { getIndexesFor, wrappedFields, wrappedTypeName, getFieldIndexesFor } from './lenshelpers'
 import { findDOMNode } from 'react-dom'
 
-export const formRules = { required, minLength, maxLength, email, regExp, rule, matches }
+export const formRules = { required, ban, minLength, maxLength, email, regExp, rule, matches }
 export const numberRules = { min, max, numberRule, equals }
 export const checkBoxRules = { loosely, strictly }
 
@@ -275,20 +276,28 @@ export interface FormProps<T>
   ) => JSX.Element | null
 }
 
+function shallowCompare(obj1: any, obj2: any) {
+  return (
+    Object.keys(obj1).length === Object.keys(obj2).length && Object.keys(obj1).every(key => obj1[key] === obj2[key])
+  )
+}
+
 class InputInner extends React.Component<
   React.DetailedHTMLProps<
     React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
     HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
   > & {
     onDidMount: (ref: React.RefObject<any>) => void
+    onDidChangeRules: () => void
     onWillUnmount: () => void
     _textArea: boolean
+    rules: any
     _select: boolean
   }
 > {
   ref = React.createRef<any>()
   render() {
-    const { onDidMount, onWillUnmount, _textArea, _select, ...restProps } = this.props
+    const { onDidMount, onWillUnmount, onDidChangeRules, _textArea, _select, ...restProps } = this.props
     if (this.props._textArea) {
       return <textarea ref={this.ref as any} {...restProps} />
     } else if (this.props._select) {
@@ -299,10 +308,12 @@ class InputInner extends React.Component<
       return <input ref={this.ref as any} {...restProps} />
     }
   }
+  componentDidUpdate(prevProps: any) {
+    if (!shallowCompare(this.props.rules, prevProps.rules)) this.props.onDidChangeRules()
+  }
   componentDidMount() {
     this.props.onDidMount(this.ref)
   }
-
   componentWillUnmount() {
     this.props.onWillUnmount()
   }
@@ -406,7 +417,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
     }
     const lensPath = props.for
     const value = L.get([lensPath], this.props.value)
-    const prevValidation = L.get([lensPath], this.state.fields)
     if (props.value != null) throw Error(`Don't provide a value as a prop for individual input field.`)
     return (
       <InputInner
@@ -434,37 +444,40 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
         {...omit(props, omitFromInputs)}
         value={value == null ? '' : value}
         checked={!!value}
-        key={JSON.stringify(rules) + JSON.stringify(props.for)}
+        rules={rules}
+        onDidChangeRules={() => {
+          if (props.value === null) {
+            throw Error('A value must be provided for rule changing input: ' + lensPath.toString())
+          }
+          this.setState(state => {
+            return {
+              fields: L.assign(
+                lensPath,
+                {
+                  rules
+                },
+                state.fields
+              )
+            }
+          })
+        }}
         onDidMount={ref => {
           if (props.value === null) {
             throw Error('A value must be provided for mounting input: ' + lensPath.toString())
           }
           this.setState(state => {
-            if (prevValidation) {
-              return {
-                fields: L.assign(
-                  lensPath,
-                  {
-                    rules,
-                    ref
-                  },
-                  state.fields
-                )
-              }
-            } else {
-              return {
-                fields: L.set(
-                  lensPath,
-                  {
-                    rules,
-                    ref,
-                    touched: false,
-                    dirty: false,
-                    type: wrappedTypeName
-                  },
-                  state.fields
-                )
-              }
+            return {
+              fields: L.set(
+                lensPath,
+                {
+                  rules,
+                  ref,
+                  touched: false,
+                  dirty: false,
+                  type: wrappedTypeName
+                },
+                state.fields
+              )
             }
           })
         }}
