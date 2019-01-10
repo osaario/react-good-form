@@ -130,7 +130,7 @@ export type TextAreaProps<
     value?: never
   }
 
-export type InputType = 'text' | 'number' | 'checkbox' | 'password' | 'price' | undefined
+export type InputType = 'text' | 'email' | 'number' | 'checkbox' | 'password' | 'price' | undefined
 export type InputProps<
   T,
   A extends keyof T,
@@ -297,7 +297,7 @@ class InputInner extends React.Component<
 > {
   ref = React.createRef<any>()
   render() {
-    const { onDidMount, onWillUnmount, onDidChangeRules, _textArea, _select, ...restProps } = this.props
+    const { onDidMount, onWillUnmount, onDidChangeRules, _textArea, _select, rules, ...restProps } = this.props
     if (this.props._textArea) {
       return <textarea ref={this.ref as any} {...restProps} />
     } else if (this.props._select) {
