@@ -1,4 +1,5 @@
 export * from './Form'
+export * from './PriceInput'
 export * from './formrules'
 
 export default {}
