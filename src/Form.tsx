@@ -1,5 +1,5 @@
 import * as React from 'react'
-import PriceInput from './PriceInput'
+import { PriceInput } from './PriceInput'
 import {
   ValidationRuleType,
   BrokenRule,

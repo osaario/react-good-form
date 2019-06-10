@@ -17,7 +17,7 @@ function fromAmount(sum: string) {
   return parseFloat(sum.replace(',', '.').replace(/\s/g, ''))
 }
 
-export default class PriceInput extends React.Component<
+export class PriceInput extends React.Component<
   React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
   { stringValue: string }
 > {
