@@ -490,8 +490,8 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
           this.setState(state => {
             return { fields: L.set([lensPath, 'touched'], true, state.fields) }
           })
-          if (this.props.onBlur) {
-            this.props.onBlur(e)
+          if (props.onBlur) {
+            props.onBlur(e)
           }
         }}
       />
