@@ -19,10 +19,12 @@ function fromAmount(sum: string) {
 
 export class PriceInput extends React.Component<
   React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
-  { stringValue: string }
+  { stringValue: string; focused: boolean }
 > {
-  state: { stringValue: string } = {
-    stringValue: this.props.value !== '' ? centsToAmount(this.props.value as any, this.props.lang || defaultLocale) : ''
+  state: { stringValue: string; focused: boolean } = {
+    stringValue:
+      this.props.value !== '' ? centsToAmount(this.props.value as any, this.props.lang || defaultLocale) : '',
+    focused: false
   }
   cents() {
     return amountToCents(this.state.stringValue)
@@ -40,7 +42,9 @@ export class PriceInput extends React.Component<
               : centsToAmount(this.props.value as any, this.props.lang || defaultLocale)
             : this.state.stringValue === '0' || this.state.stringValue === '0' + splitter
               ? '0'
-              : ''
+              : this.state.focused
+                ? ''
+                : centsToAmount(0, this.props.lang || defaultLocale)
       })
     }
   }
@@ -51,6 +55,16 @@ export class PriceInput extends React.Component<
       <input
         {...this.props}
         type="text"
+        onBlur={() => {
+          this.setState({
+            focused: false
+          })
+        }}
+        onFocus={() => {
+          this.setState({
+            focused: true
+          })
+        }}
         value={this.state.stringValue}
         onChange={(e: any) => {
           const stringValue = e.target.value
