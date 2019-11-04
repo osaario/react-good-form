@@ -55,15 +55,17 @@ export class PriceInput extends React.Component<
       <input
         {...this.props}
         type="text"
-        onBlur={() => {
+        onBlur={e => {
           this.setState({
             focused: false
           })
+          if (this.props.onBlur) this.props.onBlur(e)
         }}
-        onFocus={() => {
+        onFocus={e => {
           this.setState({
             focused: true
           })
+          if (this.props.onFocus) this.props.onFocus(e)
         }}
         value={this.state.stringValue}
         onChange={(e: any) => {
