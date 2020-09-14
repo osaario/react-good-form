@@ -55,8 +55,10 @@ class EmailForm extends React.Component {
 You can create arbitary rules by providing a rule function.
 
 ```JSX
+const rule = email => email.endsWith("hotmail.com")
+
 <Input
-  rule={email => email.endsWith("hotmail.com")}
+  rule={rule}
   email={true}
   for="email"
 />
@@ -65,9 +67,11 @@ You can create arbitary rules by providing a rule function.
 Or an regular expression.
 
 ```JSX
+const regExp = /(123456|password)/
+
 <Input
   type="password"
-  regExp={/(123456|password)/}
+  regExp={regExp}
   for="password"
 />
 ```
