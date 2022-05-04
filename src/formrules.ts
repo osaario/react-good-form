@@ -77,14 +77,12 @@ export const matches: ValidationRuleType<string> = (value, ruleValue) => {
 
 export const min: ValidationRuleType<number> = (value, ruleValue) => {
   checkTypes(value, ruleValue, 'number', 'number', 'min')
-  if (value == null) return !!value === !!ruleValue ? null : ruleValue
-  return value >= ruleValue ? null : ruleValue
+  return Number(value) >= ruleValue ? null : ruleValue
 }
 
 export const max: ValidationRuleType<number> = (value, ruleValue) => {
   checkTypes(value, ruleValue, 'number', 'number', 'max')
-  if (value == null) return ruleValue
-  return value <= ruleValue ? null : ruleValue
+  return Number(value) <= ruleValue ? null : ruleValue
 }
 
 export const regExp: ValidationRuleType<RegExp> = (value, ruleValue) => {
