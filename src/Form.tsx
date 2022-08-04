@@ -216,6 +216,7 @@ export interface FormProps<T>
   extends _.Omit<React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>, 'onChange'> {
   value: T
   optimized?: boolean
+  customErrorMessages?: { [K in keyof BrokenRules]?: string }
   onChange: (data: T) => void
   children: (
     Form: {

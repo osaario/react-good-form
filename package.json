@@ -1,6 +1,6 @@
 {
   "name": "react-good-form",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "Good Form that supports nesting and provides validation",
   "keywords": [
     "react",
@@ -129,8 +129,8 @@
     "travis-deploy-once": "^5.0.9"
   },
   "peerDependencies": {
-    "react": "^16.6.0 - 17",
-    "react-dom": "^16.6.0 - 17"
+    "react": ">=16.6.0 <18",
+    "react-dom": ">=16.6.0 <18"
   },
   "dependencies": {
     "partial.lenses": "^13.2.0"
