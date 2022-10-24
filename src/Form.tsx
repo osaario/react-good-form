@@ -160,6 +160,7 @@ type FormGroupAddons = {
   leftAddon?: React.ReactNode
   rightAddon?: React.ReactNode
   errorForBrokenRules?: (brokenRules: BrokenRules) => string
+  validateInstantly?: boolean
 }
 
 export type TextAreaFormGroupProps<
