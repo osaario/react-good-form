@@ -218,7 +218,12 @@ export interface FormProps<T>
   value: T
   optimized?: boolean
   customErrorMessages?: { [K in keyof BrokenRules]?: { [L in keyof T]?: string } }
-  onChange: (data: T) => void
+  onChange: (
+    data: T,
+    checks: {
+      isFormValid: () => boolean
+    }
+  ) => void
   children: (
     Form: {
       Input: <
@@ -271,6 +276,7 @@ export interface FormProps<T>
       pristine: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
         path: LensPathType<T, A, U, S, K>
       ) => boolean
+      isFormValid: () => boolean
     },
     emitChange: <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
       event: FormEventType<T, A, U, S, K>
@@ -511,10 +517,14 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
           return L.set([event.for, val[0]], val[1], acc)
         }
       }, this.props.value)
-      this.props.onChange(value)
+      this.props.onChange(value, {
+        isFormValid: () => this.isFormValid(value)
+      })
     } else {
       const value = L.set([event.for], event.value, this.props.value)
-      this.props.onChange(value)
+      this.props.onChange(value, {
+        isFormValid: () => this.isFormValid(value)
+      })
     }
   }
   valid = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
@@ -547,6 +557,22 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
   ) => {
     return !this.dirty(path)
   }
+  getInvalidFields = (value: T) => {
+    const indexes = getFieldIndexesFor(this.state.fields)
+    return indexes.reduce((acc: any, index: any) => {
+      const field = index[1]
+      if (!field || !field.rules) {
+        return acc
+      } else {
+        const validation = getValidationFromRules(field.rules, L.get(index[0], value))
+        if (Object.keys(validation).length > 0) return acc.concat([field])
+        return acc
+      }
+    }, [])
+  }
+  isFormValid = (value: T) => {
+    return !(this.getInvalidFields(value).length > 0)
+  }
   render() {
     const props = omit(this.props, ['value', 'onChange'])
     return (
@@ -555,18 +581,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
         onSubmit={(e: any) => {
           e.preventDefault()
           e.stopPropagation()
-          const indexes = getFieldIndexesFor(this.state.fields)
-          const invalidFields = indexes.reduce((acc: any, index: any) => {
-            const field = index[1]
-            const value = L.get(index[0], this.props.value)
-            if (!field || !field.rules) {
-              return acc
-            } else {
-              const validation = getValidationFromRules(field.rules, value)
-              if (Object.keys(validation).length > 0) return acc.concat([field])
-              return acc
-            }
-          }, [])
+          const invalidFields = this.getInvalidFields(this.props.value)
           if (invalidFields.length > 0) {
             if (invalidFields[0].ref.current.props && invalidFields[0].ref.current.props.type === 'price') {
               ;(findDOMNode(invalidFields[0].ref.current) as any).focus()
@@ -597,7 +612,8 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
               touched: this.touched,
               untouched: this.untouched,
               dirty: this.dirty,
-              pristine: this.pristine
+              pristine: this.pristine,
+              isFormValid: () => this.isFormValid(this.props.value)
             },
             this.emitChange
           )}
