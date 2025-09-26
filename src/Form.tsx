@@ -143,6 +143,7 @@ export type InputProps<
   (I extends ('number' | 'price') ? NumberInputRules : I extends 'checkbox' ? CheckboxRules : StringRules) & {
     for: LensPathType<T, A, U, S, K>
     value?: never
+    showCharCounter?: boolean
   } & { type?: I }
 
 export type SelectProps<
