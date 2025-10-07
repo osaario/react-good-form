@@ -1,6 +1,6 @@
 {
   "name": "react-good-form",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "Good Form that supports nesting and provides validation",
   "keywords": [
     "react",
@@ -15,7 +15,7 @@
   "module": "dist/react-good-form.es5.js",
   "typings": "dist/types/react-good-form.d.ts",
   "files": [
-    "dist"
+    "dist/**/*"
   ],
   "author": "osaario <osaario1@gmail.com>",
   "repository": {
@@ -40,7 +40,8 @@
     "semantic-release": "semantic-release",
     "semantic-release-prepare": "ts-node tools/semantic-release-prepare",
     "precommit": "lint-staged",
-    "travis-deploy-once": "travis-deploy-once --pro"
+    "travis-deploy-once": "travis-deploy-once --pro",
+    "prepare": "npm run build"
   },
   "lint-staged": {
     "{src,test}/**/*.ts": [

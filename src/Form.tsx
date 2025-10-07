@@ -128,9 +128,10 @@ export type TextAreaProps<
   StringRules & {
     for: LensPathType<T, A, U, S, K>
     value?: never
+    showCharCounter?: boolean
   }
 
-export type InputType = 'text' | 'email' | 'number' | 'checkbox' | 'password' | 'price' | undefined
+export type InputType = 'text' | 'email' | 'number' | 'checkbox' | 'password' | 'price' | 'color' | undefined
 export type InputProps<
   T,
   A extends keyof T,
@@ -142,6 +143,7 @@ export type InputProps<
   (I extends ('number' | 'price') ? NumberInputRules : I extends 'checkbox' ? CheckboxRules : StringRules) & {
     for: LensPathType<T, A, U, S, K>
     value?: never
+    showCharCounter?: boolean
   } & { type?: I }
 
 export type SelectProps<
@@ -541,6 +543,11 @@ export class Form<T> extends React.Component<FormProps<T>, FormState> {
     path: LensPathType<T, A, U, S, K>
   ) => {
     return L.get([path, 'dirty'], this.state.fields)
+  }
+  value = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
+    path: LensPathType<T, A, U, S, K>
+  ) => {
+    return L.get([path], this.props.value)
   }
   pristine = <A extends keyof T, U extends keyof T[A], S extends keyof T[A][U], K extends keyof T[A][U][S]>(
     path: LensPathType<T, A, U, S, K>
