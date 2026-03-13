@@ -327,6 +327,7 @@ function getValidationFromRules(rules: any, value: any): BrokenRules {
   // _.keys is untyped!!
   const { ref, ...withoutRef } = rules
   const validationsForField = Object.keys(withoutRef)
+    .filter(key => withoutRef[key] !== undefined)
     .map(key => {
       const ruleValue = withoutRef[key]
       const validation = ({ ...formRules, ...numberRules, ...checkBoxRules } as any)[key as any](
